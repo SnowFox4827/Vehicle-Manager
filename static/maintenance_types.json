@@ -1,0 +1,43 @@
+{
+    "Engine": [
+        "Air Filter Replacement",
+        "Drive Belt Replacement",
+        "Engine Diagnostic",
+        "Fuel Filter Replacement",
+        "Oil Change",
+        "Oil Filter Replacement",
+        "Serpentine Belt Replacement",
+        "Spark Plugs",
+        "Thermostat Replacement"
+    ],
+
+    "Brakes": [
+        "Brake Fluid Flush",
+        "Brake Inspection",
+        "Brake Replacement"
+    ],
+
+    "Tires": [
+        "Tire Repair",
+        "Tire Replacement",
+        "Tire Rotation",
+        "Wheel Alignment",
+        "Wheel Bearing Replacement"
+    ],
+
+    "Electrical": [
+        "Battery Replacement",
+        "Starter Replacement",
+        "Software Update"
+    ],
+
+    "Fluids": [
+        "Coolant Flush",
+        "Transmission Service",
+        "Radiator Service"
+    ],
+
+    "Inspection": [
+        "DOT Inspection"
+    ]
+}

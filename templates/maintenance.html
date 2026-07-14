@@ -18,12 +18,42 @@
 
     <div class="form-container">
         <div class="form">
-            <select id="vehicle"></select>
-            <input id="service_date" type="date" required>
-            <input id="service_type" placeholder="Service Type" required>
-            <input id="description" placeholder="Description">
-            <input id="maintenance_mileage" type="number" placeholder="Mileage at Service">
-            <button class="save" onclick="saveMaintenance()">Add Maintenance</button>
+            <select id="vehicle" required></select>
+            
+            <input 
+                id="service_date" 
+                type="date" 
+                required>
+            
+            <!-- Service Category -->
+
+            <select id="service_category" onchange="loadServices()">
+
+                <option value="">
+                    -- Select Category --
+                </option>
+
+            </select>
+
+
+            <select id="service_type">
+
+                <option value="">
+                    -- Select Service --
+                </option>
+
+            </select>
+            
+            <input 
+                id="description" 
+                placeholder="Additional notes">
+            
+            <input 
+                id="maintenance_mileage" 
+                type="number" 
+                placeholder="Mileage at Service">
+            
+            <button class="save" onclick="saveMaintenance()">Add Maintenance Record</button>
         </div>
     </div>
 
@@ -32,6 +62,7 @@
             <tr>
                 <th>Vehicle</th>
                 <th>Date</th>
+                <th>Category</th>
                 <th>Service</th>
                 <th>Description</th>
                 <th>Mileage</th>

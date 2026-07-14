@@ -43,12 +43,13 @@ def init_db():
         conn.execute("""
             CREATE TABLE IF NOT EXISTS maintenance (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_id INTEGER NOT NULL,
-                service_date TEXT NOT NULL,
-                service_type TEXT NOT NULL,
+                vehicle_id INTEGER,
+                service_date TEXT,
+                category TEXT,
+                service_type TEXT,
                 description TEXT,
                 mileage INTEGER,
-                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id)
             )
         """)
         conn.commit()
@@ -268,17 +269,18 @@ def get_maintenance():
     conn = get_db()
     try:
         records = conn.execute("""
-            SELECT 
+            SELECT
                 maintenance.id,
                 vehicles.make,
                 vehicles.model,
-                maintenance.vehicle_id,
                 maintenance.service_date,
+                maintenance.category,
                 maintenance.service_type,
                 maintenance.description,
                 maintenance.mileage
             FROM maintenance
-            JOIN vehicles ON vehicles.id = maintenance.vehicle_id
+            JOIN vehicles
+            ON vehicles.id = maintenance.vehicle_id
             ORDER BY maintenance.service_date DESC
         """).fetchall()
         return jsonify([dict(r) for r in records])
@@ -295,16 +297,16 @@ def add_maintenance():
     conn = get_db()
     try:
         cursor = conn.execute("""
-            INSERT INTO maintenance 
-            (vehicle_id, service_date, service_type, description, mileage)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO maintenance(vehicle_id,service_date,category,service_type,description,mileage)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            data["vehicle_id"],
-            data["service_date"],
-            data["service_type"],
-            data.get("description"),
-            data.get("mileage")
-        ))
+                data["vehicle_id"],
+                data["service_date"],
+                data["category"],
+                data["service_type"],
+                data["description"],
+                data["mileage"]
+            ))
         conn.commit()
         return jsonify({"message": "Maintenance record added successfully", "id": cursor.lastrowid}), 201
     finally:
@@ -318,10 +320,11 @@ def update_maintenance(record_id):
     try:
         cursor = conn.execute("""
             UPDATE maintenance
-            SET service_date = ?, service_type = ?, description = ?, mileage = ?
+            SET service_date = ?, category=?,service_type = ?, description = ?, mileage = ?
             WHERE id = ?
         """, (
             data.get("service_date"),
+            data.get("category"),
             data.get("service_type"),
             data.get("description"),
             data.get("mileage"),
