@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<title>Dashboard</title>
+<meta charset="UTF-8">
 
-<link rel="stylesheet"
+<meta name="viewport" 
+content="width=device-width, initial-scale=1.0">
+
+<title>Fleet Dashboard</title>
+
+<link rel="stylesheet" 
 href="/static/style.css">
 
 </head>
@@ -28,45 +33,70 @@ href="/static/style.css">
         Mileage
     </a>
 
+    <a href="/maintenance">
+        Maintenance
+    </a>
+
 </nav>
 
 
 
-<h1>Fleet Dashboard</h1>
+<h1>
+Fleet Dashboard
+</h1>
 
 
 
 <div class="cards">
 
 
-<div class="card">
+    <div class="card">
 
-<h2>
-{{vehicle_count}}
-</h2>
+        <h2>
+            {{ vehicle_count }}
+        </h2>
 
-<p>
-Vehicles
-</p>
+        <p>
+            Vehicles
+        </p>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <h2>
+            {{ mileage_count }}
+        </h2>
+
+        <p>
+            Mileage Records
+        </p>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <h2>
+            {{ maintenance_count }}
+        </h2>
+
+        <p>
+            Maintenance Records
+        </p>
+
+    </div>
+
 
 </div>
 
 
 
-<div class="card">
-
-<h2>
-{{mileage_count}}
-</h2>
-
-<p>
-Mileage Records
-</p>
-
-</div>
 
 
-</div>
 
 
 
@@ -78,6 +108,8 @@ Recent Mileage
 
 <table>
 
+
+<thead>
 
 <tr>
 
@@ -95,6 +127,11 @@ Date
 
 </tr>
 
+</thead>
+
+
+
+<tbody>
 
 
 {% for row in recent_mileage %}
@@ -102,15 +139,106 @@ Date
 <tr>
 
 <td>
-{{row.make}} {{row.model}}
+{{ row.make }} {{ row.model }}
 </td>
 
-<td>
-{{row.mileage}}
-</td>
 
 <td>
-{{row.date}}
+{{ row.mileage }}
+</td>
+
+
+<td>
+{{ row.date }}
+</td>
+
+
+</tr>
+
+
+{% else %}
+
+<tr>
+
+<td colspan="3">
+No mileage records found
+</td>
+
+</tr>
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+</table>
+
+
+
+<h2>
+Upcoming Maintenance
+</h2>
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+Vehicle
+</th>
+
+<th>
+Service
+</th>
+
+<th>
+Due Mileage
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+
+{% for item in upcoming_maintenance %}
+
+
+<tr>
+
+<td>
+{{ item.make }} {{ item.model }}
+</td>
+
+
+<td>
+{{ item.service_type }}
+</td>
+
+
+<td>
+{{ item.next_service_mileage }}
+</td>
+
+
+</tr>
+
+
+{% else %}
+
+
+<tr>
+
+<td colspan="3">
+No upcoming maintenance
 </td>
 
 </tr>
@@ -119,7 +247,12 @@ Date
 {% endfor %}
 
 
+
+</tbody>
+
+
 </table>
+
 
 
 </body>
