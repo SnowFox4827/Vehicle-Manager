@@ -1,104 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" 
-content="width=device-width, initial-scale=1.0">
-
-<title>Vehicle Manager</title>
-
-<link rel="stylesheet" 
-href="/static/style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Management</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
-
 <body>
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/vehicles">Vehicles</a>
+        <a href="/mileage">Mileage</a>
+        <a href="/maintenance">Maintenance</a>
+    </nav>
 
+    <h1>Vehicle Management</h1>
 
-<nav class="navbar">
+    <div class="form-container">
+        <div class="form">
+            <input type="hidden" id="vehicle_id">
+            <input id="make" placeholder="Make" required>
+            <input id="model" placeholder="Model" required>
+            <input id="year" type="number" placeholder="Year">
+            <input id="vin" placeholder="VIN">
+            
+            <button class="save" onclick="saveVehicle()">Save Vehicle</button>
+            <button class="cancel" onclick="clearForm()">Clear Form</button>
+        </div>
+    </div>
 
-    <a href="/">
-        Home
-    </a>
+    <table id="vehicleTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Make</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>VIN</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
-    <a href="/vehicles">
-        Vehicles
-    </a>
-
-    <a href="/mileage">
-        Mileage
-    </a>
-
-    <a href="/maintenance">
-        Maintenance
-    </a>
-
-</nav>
-
-
-
-<h1>Vehicle Management</h1>
-
-
-<div class="form">
-
-
-<input type="hidden" id="id">
-
-
-<input id="make" placeholder="Make">
-
-<input id="model" placeholder="Model">
-
-<input id="year" placeholder="Year">
-
-<input id="vin" placeholder="VIN">
-
-
-<button class="save" onclick="saveVehicle()">
-Save Vehicle
-</button>
-
-
-</div>
-
-
-
-<table>
-
-
-<thead>
-
-<tr>
-
-<th>ID</th>
-<th>Make</th>
-<th>Model</th>
-<th>Year</th>
-<th>VIN</th>
-<th>Actions</th>
-
-</tr>
-
-</thead>
-
-
-<tbody id="vehicleTable">
-
-</tbody>
-
-
-</table>
-
-
-
-<script src="/static/app.js"></script>
-
-
+    <script src="/static/app.js"></script>
 </body>
-
 </html>

@@ -1,215 +1,42 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<nav class="navbar">
-
-    <a href="/">
-        Home
-    </a>
-
-    <a href="/vehicles">
-        Vehicles
-    </a>
-
-    <a href="/mileage">
-        Mileage
-    </a>
-
-    <a href="/maintenance">
-        Maintenance
-    </a>
-
-</nav>
-
-<title>Mileage Tracking</title>
-
-<link rel="stylesheet"
-href="/static/style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mileage Tracking</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
-
 <body>
-
-<h1>Mileage Tracking</h1>
-
-
-<div class="form">
-
-
-<select id="vehicle"></select>
-
-
-<input id="mileage"
-placeholder="Current Mileage">
-
-
-<input id="date"
-type="date">
-
-
-<button class="save"
-onclick="saveMileage()">
-
-Add Mileage
-
-</button>
-
-
-</div>
-
-
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Vehicle</th>
-<th>Mileage</th>
-<th>Date</th>
-
-</tr>
-
-</thead>
-
-
-<tbody id="mileageTable">
-
-</tbody>
-
-
-</table>
-
-
-<script>
-
-loadVehicles();
-loadMileage();
-
-
-
-async function loadVehicles(){
-
-    let response =
-    await fetch("/api/vehicles");
-
-
-    let vehicles =
-    await response.json();
-
-
-    let dropdown =
-    document.getElementById("vehicle");
-
-
-    vehicles.forEach(v=>{
-
-        dropdown.innerHTML += `
-
-        <option value="${v.id}">
-        ${v.year} ${v.make} ${v.model}
-        </option>
-
-        `;
-
-    });
-
-}
-
-
-
-
-async function saveMileage(){
-
-    let data={
-
-        vehicle_id:
-        vehicle.value,
-
-        mileage:
-        mileage.value,
-
-        date:
-        date.value
-
-    };
-
-
-    await fetch(
-    "/api/mileage",
-    {
-
-        method:"POST",
-
-        headers:{
-        "Content-Type":"application/json"
-        },
-
-        body:
-        JSON.stringify(data)
-
-    });
-
-
-    loadMileage();
-
-}
-
-
-
-
-async function loadMileage(){
-
-    let response =
-    await fetch("/api/mileage");
-
-
-    let records =
-    await response.json();
-
-
-    let table =
-    document.getElementById("mileageTable");
-
-
-    table.innerHTML="";
-
-
-    records.forEach(r=>{
-
-
-        table.innerHTML += `
-
-        <tr>
-
-        <td>
-        ${r.make} ${r.model}
-        </td>
-
-        <td>
-        ${r.mileage}
-        </td>
-
-        <td>
-        ${r.date}
-        </td>
-
-        </tr>
-
-        `;
-
-
-    });
-
-}
-
-</script>
-
-
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/vehicles">Vehicles</a>
+        <a href="/mileage">Mileage</a>
+        <a href="/maintenance">Maintenance</a>
+    </nav>
+
+    <h1>Mileage Tracking</h1>
+
+    <div class="form-container">
+        <div class="form">
+            <select id="vehicle"></select>
+            <input id="mileage" type="number" placeholder="Current Mileage" required>
+            <input id="date" type="date" required>
+            <button class="save" onclick="saveMileage()">Add Mileage</button>
+        </div>
+    </div>
+
+    <table id="mileageTable">
+        <thead>
+            <tr>
+                <th>Vehicle</th>
+                <th>Mileage</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="/static/app.js"></script>
 </body>
-
 </html>

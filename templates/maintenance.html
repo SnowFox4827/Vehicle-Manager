@@ -1,298 +1,46 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-<title>
-Maintenance
-</title>
-
-<link rel="stylesheet"
-href="/static/style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Tracking</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
-
 <body>
-
-
-<nav class="navbar">
-
-<a href="/">
-Home
-</a>
-
-<a href="/vehicles">
-Vehicles
-</a>
-
-<a href="/mileage">
-Mileage
-</a>
-
-<a href="/maintenance">
-Maintenance
-</a>
-
-</nav>
-
-
-
-<h1>
-Maintenance Tracking
-</h1>
-
-
-
-<div class="form">
-
-
-<select id="vehicle"></select>
-
-
-<select id="service_type">
-
-    <option value="">
-        Select Maintenance Type
-    </option>
-
-    <option value="Air Filter">
-        Air Filter
-    </option>
-
-    <option value="Battery Replacement">
-        Battery Replacement
-    </option>
-
-    <option value="Brake Replacement">
-        Brake Replacement
-    </option>
-
-    <option value="Brake Service">
-        Brake Service
-    </option>
-
-    <option value="Check Up">
-        Check Up
-    </option>
-
-    <option value="Coolant Flush">
-        Coolant Flush
-    </option>
-
-    <option value="Inspection">
-        Inspection
-    </option>
-
-    <option value="Oil Change">
-        Oil Change
-    </option>
-
-    <option value="Other">
-        Other
-    </option>
-
-    <option value="Repair">
-        Repair
-    </option>
-
-    <option value="Tire Replacement">
-        Tire Replacement
-    </option>
-
-    <option value="Tire Rotation">
-        Tire Rotation
-    </option>
-
-    <option value="Transmission Service">
-        Transmission Service
-    </option>
-
-</select>
-
-<input id="description"
-placeholder="Description">
-
-
-<input id="mileage"
-placeholder="Mileage">
-
-
-<input id="date"
-type="date">
-
-
-
-<button class="save"
-onclick="saveMaintenance()">
-
-Save
-
-</button>
-
-
-</div>
-
-
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>
-Vehicle
-</th>
-
-<th>
-Service
-</th>
-
-<th>
-Mileage
-</th>
-
-<th>
-Date
-</th>
-
-</tr>
-
-</thead>
-
-
-<tbody id="maintenanceTable">
-
-</tbody>
-
-
-</table>
-
-<script>
-
-loadVehicles();
-loadMaintenance();
-
-
-
-async function loadVehicles(){
-
-    let response = await fetch("/api/vehicles");
-
-    let vehicles = await response.json();
-
-
-    let dropdown = document.getElementById("vehicle");
-
-    dropdown.innerHTML = "";
-
-
-    vehicles.forEach(v => {
-
-        dropdown.innerHTML += `
-
-        <option value="${v.id}">
-            ${v.make} ${v.model} (${v.year})
-        </option>
-
-        `;
-
-    });
-
-}
-
-
-
-async function loadMaintenance(){
-
-    let response = await fetch("/api/maintenance");
-
-    let records = await response.json();
-
-
-    let table = document.getElementById("maintenanceTable");
-
-    table.innerHTML = "";
-
-
-    records.forEach(r => {
-
-        table.innerHTML += `
-
-        <tr>
-
-            <td>
-                ${r.make} ${r.model}
-            </td>
-
-            <td>
-                ${r.service_type}
-            </td>
-
-            <td>
-                ${r.mileage}
-            </td>
-
-            <td>
-                ${r.service_date}
-            </td>
-
-        </tr>
-
-        `;
-
-    });
-
-}
-
-
-
-
-async function saveMaintenance(){
-
-    let maintenance = {
-
-        vehicle_id:
-            document.getElementById("vehicle").value,
-
-        service_type:
-            document.getElementById("service_type").value,
-
-        description:
-            document.getElementById("description").value,
-
-        mileage:
-            document.getElementById("mileage").value,
-
-        service_date:
-            document.getElementById("date").value
-
-    };
-
-
-    await fetch("/api/maintenance",
-    {
-
-        method:"POST",
-
-        headers:{
-            "Content-Type":"application/json"
-        },
-
-        body:
-            JSON.stringify(maintenance)
-
-    });
-
-
-    loadMaintenance();
-
-}
-
-</script>
-
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/vehicles">Vehicles</a>
+        <a href="/mileage">Mileage</a>
+        <a href="/maintenance">Maintenance</a>
+    </nav>
+
+    <h1>Maintenance Tracking</h1>
+
+    <div class="form-container">
+        <div class="form">
+            <select id="vehicle"></select>
+            <input id="service_date" type="date" required>
+            <input id="service_type" placeholder="Service Type" required>
+            <input id="description" placeholder="Description">
+            <input id="maintenance_mileage" type="number" placeholder="Mileage at Service">
+            <button class="save" onclick="saveMaintenance()">Add Maintenance</button>
+        </div>
+    </div>
+
+    <table id="maintenanceTable">
+        <thead>
+            <tr>
+                <th>Vehicle</th>
+                <th>Date</th>
+                <th>Service</th>
+                <th>Description</th>
+                <th>Mileage</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="/static/app.js"></script>
 </body>
-
 </html>
