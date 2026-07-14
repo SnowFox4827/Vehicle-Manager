@@ -3,251 +3,65 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta name="viewport" 
-content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fleet Dashboard</title>
+    <title>Fleet Dashboard</title>
 
-<link rel="stylesheet" 
-href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 
 </head>
 
-
 <body>
 
+    <nav class="navbar">
 
-<nav class="navbar">
+        <a href="/">Home</a>
 
-    <a href="/">
-        Home
-    </a>
+        <a href="/vehicles">Vehicles</a>
 
-    <a href="/vehicles">
-        Vehicles
-    </a>
+        <a href="/mileage">Mileage</a>
 
-    <a href="/mileage">
-        Mileage
-    </a>
+        <a href="/maintenance">Maintenance</a>
 
-    <a href="/maintenance">
-        Maintenance
-    </a>
+    </nav>
 
-</nav>
+    <h1>Fleet Dashboard</h1>
 
+    <div class="vehicle-grid">
 
+{% for vehicle in recent_mileage %}
 
-<h1>
-Fleet Dashboard
-</h1>
+<div class="vehicle-card">
 
+    <h3>
+        {{ vehicle.make }} {{ vehicle.model }}
+    </h3>
 
+    <p>
+        <strong>Year:</strong>
+        {{ vehicle.year }}
+    </p>
 
-<div class="cards">
+    <p>
+        <strong>Current Mileage:</strong>
+        {% if vehicle.mileage %}
+            {{ "{:,}".format(vehicle.mileage) }} miles
+        {% else %}
+            No mileage recorded
+        {% endif %}
+    </p>
 
-
-    <div class="card">
-
-        <h2>
-            {{ vehicle_count }}
-        </h2>
-
-        <p>
-            Vehicles
-        </p>
-
-    </div>
-
-
-
-    <div class="card">
-
-        <h2>
-            {{ mileage_count }}
-        </h2>
-
-        <p>
-            Mileage Records
-        </p>
-
-    </div>
-
-
-
-    <div class="card">
-
-        <h2>
-            {{ maintenance_count }}
-        </h2>
-
-        <p>
-            Maintenance Records
-        </p>
-
-    </div>
-
+    {% if vehicle.date %}
+    <p>
+        <strong>Last Updated:</strong>
+        {{ vehicle.date }}
+    </p>
+    {% endif %}
 
 </div>
 
-
-<h2>
-Recent Mileage
-</h2>
-
-
-<table>
-
-
-<thead>
-
-<tr>
-
-<th>
-Vehicle
-</th>
-
-<th>
-Mileage
-</th>
-
-<th>
-Date
-</th>
-
-</tr>
-
-</thead>
-
-
-
-<tbody>
-
-
-{% for row in recent_mileage %}
-
-<tr>
-
-<td>
-{{ row.make }} {{ row.model }}
-</td>
-
-
-<td>
-{{ row.mileage }}
-</td>
-
-
-<td>
-{{ row.date }}
-</td>
-
-
-</tr>
-
-
-{% else %}
-
-<tr>
-
-<td colspan="3">
-No mileage records found
-</td>
-
-</tr>
-
 {% endfor %}
-
-
-
-</tbody>
-
-
-</table>
-
-
-
-<h2>
-Upcoming Maintenance
-</h2>
-
-
-<table>
-
-
-<thead>
-
-<tr>
-
-<th>
-Vehicle
-</th>
-
-<th>
-Service
-</th>
-
-<th>
-Due Mileage
-</th>
-
-</tr>
-
-</thead>
-
-
-<tbody>
-
-
-{% for item in upcoming_maintenance %}
-
-
-<tr>
-
-<td>
-{{ item.make }} {{ item.model }}
-</td>
-
-
-<td>
-{{ item.service_type }}
-</td>
-
-
-<td>
-{{ item.next_service_mileage }}
-</td>
-
-
-</tr>
-
-
-{% else %}
-
-
-<tr>
-
-<td colspan="3">
-No upcoming maintenance
-</td>
-
-</tr>
-
-
-{% endfor %}
-
-
-
-</tbody>
-
-
-</table>
-
-
-
-</body>
 
 </html>

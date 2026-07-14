@@ -51,9 +51,65 @@ Maintenance Tracking
 <select id="vehicle"></select>
 
 
-<input id="service_type"
-placeholder="Service Type">
+<select id="service_type">
 
+    <option value="">
+        Select Maintenance Type
+    </option>
+
+    <option value="Air Filter">
+        Air Filter
+    </option>
+
+    <option value="Battery Replacement">
+        Battery Replacement
+    </option>
+
+    <option value="Brake Replacement">
+        Brake Replacement
+    </option>
+
+    <option value="Brake Service">
+        Brake Service
+    </option>
+
+    <option value="Check Up">
+        Check Up
+    </option>
+
+    <option value="Coolant Flush">
+        Coolant Flush
+    </option>
+
+    <option value="Inspection">
+        Inspection
+    </option>
+
+    <option value="Oil Change">
+        Oil Change
+    </option>
+
+    <option value="Other">
+        Other
+    </option>
+
+    <option value="Repair">
+        Repair
+    </option>
+
+    <option value="Tire Replacement">
+        Tire Replacement
+    </option>
+
+    <option value="Tire Rotation">
+        Tire Rotation
+    </option>
+
+    <option value="Transmission Service">
+        Transmission Service
+    </option>
+
+</select>
 
 <input id="description"
 placeholder="Description">
@@ -61,14 +117,6 @@ placeholder="Description">
 
 <input id="mileage"
 placeholder="Mileage">
-
-
-<input id="cost"
-placeholder="Cost">
-
-
-<input id="next_service"
-placeholder="Next Service Mileage">
 
 
 <input id="date"
@@ -104,10 +152,6 @@ Service
 
 <th>
 Mileage
-</th>
-
-<th>
-Cost
 </th>
 
 <th>
@@ -192,10 +236,6 @@ async function loadMaintenance(){
             </td>
 
             <td>
-                $${r.cost}
-            </td>
-
-            <td>
                 ${r.service_date}
             </td>
 
@@ -225,12 +265,6 @@ async function saveMaintenance(){
 
         mileage:
             document.getElementById("mileage").value,
-
-        cost:
-            document.getElementById("cost").value,
-
-        next_service_mileage:
-            document.getElementById("next_service").value,
 
         service_date:
             document.getElementById("date").value
