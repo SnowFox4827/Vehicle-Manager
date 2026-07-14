@@ -1,23 +1,153 @@
 {
+    "Body": [
+        "Body Damage Repair",
+        "Door Repair",
+        "Mirror Replacement",
+        "Paint Repair",
+        "Rust Repair",
+        "Windshield Replacement"
+    ],
+
+    "Brakes": [
+        "ABS Diagnostic",
+        "ABS Sensor Replacement",
+        "Brake Caliper Replacement",
+        "Brake Fluid Flush",
+        "Brake Inspection",
+        "Brake Line Repair",
+        "Brake Pad Replacement",
+        "Brake Replacement",
+        "Brake Rotor Replacement",
+        "Emergency Brake Adjustment"
+    ],
+
+    "Drivetrain": [
+        "4WD System Inspection",
+        "Differential Service",
+        "Driveshaft Replacement",
+        "Transfer Case Service",
+        "U-Joint Replacement"
+    ],
+
+    "Electrical": [
+        "Alternator Replacement",
+        "Battery Replacement",
+        "Battery Test",
+        "Electrical Diagnostic",
+        "Fuse Replacement",
+        "Headlight Replacement",
+        "Horn Replacement",
+        "Lighting Repair",
+        "Software Update",
+        "Starter Replacement",
+        "Tail Light Replacement",
+        "Wiring Repair"
+    ],
+
     "Engine": [
         "Air Filter Replacement",
         "Drive Belt Replacement",
         "Engine Diagnostic",
+        "Engine Mount Replacement",
+        "Engine Tune-Up",
         "Fuel Filter Replacement",
+        "Intake Cleaning",
         "Oil Change",
         "Oil Filter Replacement",
+        "PCV Valve Replacement",
         "Serpentine Belt Replacement",
         "Spark Plugs",
-        "Thermostat Replacement"
+        "Thermostat Replacement",
+        "Timing Belt Replacement",
+        "Timing Chain Service",
+        "Valve Adjustment"
     ],
 
-    "Brakes": [
-        "Brake Fluid Flush",
-        "Brake Inspection",
-        "Brake Replacement"
+    "Fluids": [
+        "AdBlue / DEF Refill",
+        "Brake Fluid Service",
+        "Coolant Flush",
+        "Differential Fluid Change",
+        "Power Steering Fluid Service",
+        "Radiator Service",
+        "Transfer Case Service",
+        "Transmission Service",
+        "Windshield Washer Fluid"
+    ],
+
+    "HVAC": [
+        "A/C Compressor Replacement",
+        "A/C Inspection",
+        "A/C Recharge",
+        "Blower Motor Replacement",
+        "Cabin Air Filter Replacement",
+        "Climate Control Diagnostic",
+        "Heater Core Replacement"
+    ],
+
+    "Inspection": [
+        "DOT Inspection"
+    ],
+
+    "Other": [
+        "Accessory Installation",
+        "Diagnostic Only",
+        "Recall Repair",
+        "See Notes",
+        "Vehicle Cleaning",
+        "Warranty Repair"
+    ],
+
+    "Safety": [
+        "Airbag Diagnostic",
+        "Emergency Equipment Check",
+        "Safety System Inspection",
+        "Seat Belt Inspection"
+    ],
+
+    "Scheduled Maintenance": [
+        "1,000 Mile Service",
+        "100,000 Mile Service",
+        "120,000 Mile Service",
+        "150,000 Mile Service",
+        "200,000 Mile Service",
+        "250,000 Mile Service",
+        "300,000 Mile Service",
+        "3,000 Mile Service",
+        "30,000 Mile Service",
+        "40,000 Mile Service",
+        "5,000 Mile Service",
+        "50,000 Mile Service",
+        "60,000 Mile Service",
+        "75,000 Mile Service",
+        "90,000 Mile Service"
+    ],
+
+    "Steering": [
+        "Power Steering Service",
+        "Steering Alignment",
+        "Steering Inspection",
+        "Steering Rack Replacement",
+        "Tie Rod Replacement"
+    ],
+
+    "Suspension": [
+        "Air Suspension Service",
+        "Ball Joint Replacement",
+        "Bushing Replacement",
+        "Control Arm Replacement",
+        "Shock Replacement",
+        "Strut Replacement",
+        "Suspension Inspection",
+        "Sway Bar Link Replacement"
     ],
 
     "Tires": [
+        "Lug Nut Replacement",
+        "Spare Tire Service",
+        "TPMS Sensor Replacement",
+        "Tire Balance",
+        "Tire Pressure Check",
         "Tire Repair",
         "Tire Replacement",
         "Tire Rotation",
@@ -25,19 +155,13 @@
         "Wheel Bearing Replacement"
     ],
 
-    "Electrical": [
-        "Battery Replacement",
-        "Starter Replacement",
-        "Software Update"
-    ],
-
-    "Fluids": [
-        "Coolant Flush",
-        "Transmission Service",
-        "Radiator Service"
-    ],
-
-    "Inspection": [
-        "DOT Inspection"
+    "Transmission": [
+        "CV Axle Replacement",
+        "CV Joint Replacement",
+        "Clutch Adjustment",
+        "Clutch Replacement",
+        "Transmission Diagnostic",
+        "Transmission Filter Replacement",
+        "Transmission Fluid Change"
     ]
 }
