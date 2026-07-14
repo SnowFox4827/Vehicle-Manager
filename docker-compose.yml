@@ -1,0 +1,18 @@
+services:
+
+  vehicle-manager:
+
+    build: .
+
+    container_name: vehicle_manager
+
+    ports:
+      - "5000:5002"
+
+    volumes:
+      - .:/app
+
+    environment:
+      - FLASK_ENV=development
+
+    restart: unless-stopped

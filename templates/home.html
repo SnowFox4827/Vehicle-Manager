@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Dashboard</title>
+
+<link rel="stylesheet"
+href="/static/style.css">
+
+</head>
+
+
+<body>
+
+
+<nav class="navbar">
+
+    <a href="/">
+        Home
+    </a>
+
+    <a href="/vehicles">
+        Vehicles
+    </a>
+
+    <a href="/mileage">
+        Mileage
+    </a>
+
+</nav>
+
+
+
+<h1>Fleet Dashboard</h1>
+
+
+
+<div class="cards">
+
+
+<div class="card">
+
+<h2>
+{{vehicle_count}}
+</h2>
+
+<p>
+Vehicles
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h2>
+{{mileage_count}}
+</h2>
+
+<p>
+Mileage Records
+</p>
+
+</div>
+
+
+</div>
+
+
+
+
+<h2>
+Recent Mileage
+</h2>
+
+
+<table>
+
+
+<tr>
+
+<th>
+Vehicle
+</th>
+
+<th>
+Mileage
+</th>
+
+<th>
+Date
+</th>
+
+</tr>
+
+
+
+{% for row in recent_mileage %}
+
+<tr>
+
+<td>
+{{row.make}} {{row.model}}
+</td>
+
+<td>
+{{row.mileage}}
+</td>
+
+<td>
+{{row.date}}
+</td>
+
+</tr>
+
+
+{% endfor %}
+
+
+</table>
+
+
+</body>
+
+</html>
