@@ -1,13 +1,8 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, jsonify
 
 from database import get_db
 
 home_bp = Blueprint("home", __name__)
-
-
-@home_bp.route("/")
-def home_page():
-    return render_template("home.html")
 
 
 @home_bp.route("/api/dashboard", methods=["GET"])
