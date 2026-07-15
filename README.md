@@ -77,7 +77,7 @@ Or:
 Build and start containers:
 
 ``` bash
-docker compose up --build -d
+docker compose up -d
 ```
 
 Frontend:
