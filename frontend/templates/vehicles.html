@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Management</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <nav class="navbar">
@@ -25,7 +25,7 @@
             <input id="vin" placeholder="VIN">
             
             <button class="save" onclick="saveVehicle()">Save Vehicle</button>
-            <button class="cancel" onclick="clearForm()">Clear Form</button>
+            <button class="cancel" onclick="clearVehicleForm()">Clear Form</button>
         </div>
     </div>
 
@@ -43,6 +43,12 @@
         <tbody></tbody>
     </table>
 
-    <script type="module" src="/static/js/vehicles.js"></script>
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/vehicles.js"></script>
+    <script src="/static/js/mileage.js"></script>
+    <script src="/static/js/maintenance.js"></script>
+    <script src="/static/js/home.js"></script>
 </body>
 </html>

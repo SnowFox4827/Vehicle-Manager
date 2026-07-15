@@ -26,6 +26,40 @@ def get_mileage():
         conn.close()
 
 
+@mileage_bp.route("/api/mileage/recent", methods=["GET"])
+def get_recent_mileage():
+    """Return each vehicle with its most recent mileage reading, if any.
+
+    Used by the frontend home dashboard. Vehicles with no mileage
+    records yet are still included (mileage/date come back null).
+    """
+    conn = get_db()
+    try:
+        records = conn.execute("""
+            SELECT make, model, year, mileage, date
+            FROM (
+                SELECT
+                    vehicles.id AS vehicle_id,
+                    vehicles.make,
+                    vehicles.model,
+                    vehicles.year,
+                    mileage.mileage,
+                    mileage.date,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY vehicles.id
+                        ORDER BY mileage.date DESC, mileage.id DESC
+                    ) AS rn
+                FROM vehicles
+                LEFT JOIN mileage ON mileage.vehicle_id = vehicles.id
+            )
+            WHERE rn = 1
+            ORDER BY make, model
+        """).fetchall()
+        return jsonify([dict(r) for r in records])
+    finally:
+        conn.close()
+
+
 @mileage_bp.route("/api/mileage", methods=["POST"])
 def add_mileage():
     data = request.get_json(silent=True) or {}
