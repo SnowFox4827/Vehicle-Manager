@@ -1,18 +1,30 @@
 services:
-
-  vehicle-manager:
-
-    build: .
-
-    container_name: vehicle_manager
+  backend:
+    build: ./backend
+    container_name: vehicle_backend
 
     ports:
-      - "5000:5002"
+      - "5002:5002"
 
     volumes:
-      - .:/app
+      - ./backend:/app
 
     environment:
       - FLASK_ENV=development
+
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: vehicle_frontend
+
+    ports:
+      - "5000:3000"
+
+    volumes:
+      - ./frontend:/app
+
+    depends_on:
+      - backend
 
     restart: unless-stopped
