@@ -12,10 +12,10 @@ The application is separated into two Docker containers:
 
 ## Features
 
--   Vehicle management (add, view, delete)
+-   Vehicle management (add, view, update, delete)
 -   Mileage tracking
 -   Maintenance tracking
--   Fleet dashboard with record counts
+-   Fleet dashboard showing each vehicle's most recent mileage
 -   SQLite database
 -   REST API backend
 -   Separate frontend and backend containers
@@ -60,7 +60,7 @@ The application is separated into two Docker containers:
             ├── mileage.js
             ├── modal.js
             ├── state.js
-            └── vehicle.js
+            └── vehicles.js
 ```
 
 ## Requirements
@@ -107,7 +107,7 @@ Frontend:
 ```
 
 -   Port `5002` = host computer port
--   Port `5003` = Flask port inside frontend container
+-   Port `5000` = Flask port inside frontend container
 
 Backend:
 
@@ -193,13 +193,19 @@ Backend API endpoints:
 
 -   GET /api/vehicles
 -   POST /api/vehicles
+-   PUT /api/vehicles/<id>
 -   DELETE /api/vehicles/<id>
 
 -   GET /api/mileage
+-   GET /api/mileage/recent
 -   POST /api/mileage
+-   PUT /api/mileage/<id>
+-   DELETE /api/mileage/<id>
 
 -   GET /api/maintenance
 -   POST /api/maintenance
+-   PUT /api/maintenance/<id>
+-   DELETE /api/maintenance/<id>
 
 Example:
 
