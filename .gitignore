@@ -1,7 +1,17 @@
-# Ignore database files
-*.db
-
-# Python cache files
+# =========================
+# Python Cache / Bytecode
+# =========================
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Environment Variables
+# =========================
+.env
+
+# =========================
+# Database Files
+# =========================
+*.db
