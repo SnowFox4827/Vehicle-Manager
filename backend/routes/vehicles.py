@@ -1,15 +1,10 @@
 import sqlite3
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, request, jsonify
 
 from database import get_db
 
 vehicles_bp = Blueprint("vehicles", __name__)
-
-
-@vehicles_bp.route("/vehicles")
-def vehicles_page():
-    return render_template("vehicles.html")
 
 
 @vehicles_bp.route("/api/vehicles", methods=["GET"])
