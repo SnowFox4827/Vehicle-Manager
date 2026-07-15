@@ -1,13 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, request, jsonify
 
 from database import get_db
 
 maintenance_bp = Blueprint("maintenance", __name__)
-
-
-@maintenance_bp.route("/maintenance")
-def maintenance_page():
-    return render_template("maintenance.html")
 
 
 @maintenance_bp.route("/api/maintenance", methods=["GET"])
