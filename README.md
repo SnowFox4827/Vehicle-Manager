@@ -5,6 +5,11 @@
 A Flask and SQLite application for managing a fleet of vehicles,
 tracking mileage, and recording maintenance history.
 
+The application is separated into two Docker containers:
+
+-   Frontend: Web interface containing HTML templates, CSS, JavaScript, and frontend data files
+-   Backend: Flask REST API with SQLite database
+
 ## Features
 
 -   Vehicle management (add, view, delete)
@@ -12,35 +17,81 @@ tracking mileage, and recording maintenance history.
 -   Maintenance tracking
 -   Fleet dashboard with record counts
 -   SQLite database
+-   REST API backend
+-   Separate frontend and backend containers
 -   Docker and Docker Compose support
 
 ## Project Structure
 
 ``` text
 .
-├── app.py
-├── requirements.txt
-├── Dockerfile
 ├── docker-compose.yml
-├── vehicles.db
-├── templates/
-├── static/
-└── README.md
+│
+├── backend/
+│   ├── app.py
+│   ├── database.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── vehicles.db
+│   └── routes/
+│       ├── home.py
+│       ├── vehicles.py
+│       ├── mileage.py
+│       └── maintenance.py
+│
+└── frontend/
+    ├── Dockerfile
+    │
+    ├── templates/
+    │   ├── home.html
+    │   ├── vehicles.html
+    │   ├── mileage.html
+    │   └── maintenance.html
+    │
+    └── static/
+        ├── css/
+        │   └── style.css
+        |
+        │── maintenance_types.json
+        |
+        └── js/
+            ├── api.js
+            ├── main.js
+            ├── maintenance.js
+            ├── mileage.js
+            ├── modal.js
+            ├── state.js
+            └── vehicle.js
 ```
 
 ## Requirements
 
 -   Docker and Docker Compose (recommended)
 
-Or: - Python 3.11+ - pip
+Or:
+
+-   Python 3.11+
+-   pip
 
 ## Run with Docker Compose
 
+Build and start containers:
+
 ``` bash
-docker compose up -d
+docker compose up --build -d
 ```
 
-Open: http://localhost:5001
+Frontend:
+
+```
+http://localhost:5002
+```
+
+Backend API:
+
+```
+http://localhost:5003
+```
 
 Stop:
 
@@ -48,7 +99,27 @@ Stop:
 docker compose down
 ```
 
-## Run without Docker
+## Docker Port Mapping
+
+Frontend:
+
+``` yaml
+5002:80
+```
+
+-   Port `5002` = host computer port
+-   Port `80` = web server port inside frontend container
+
+Backend:
+
+``` yaml
+5003:5002
+```
+
+-   Port `5003` = host computer port
+-   Port `5002` = Flask port inside backend container
+
+## Run Backend Without Docker
 
 Install dependencies:
 
@@ -62,22 +133,98 @@ Start:
 python app.py
 ```
 
-Open: http://localhost:5001
+Backend runs on:
+
+```
+http://localhost:5002
+```
 
 ## Database
 
-The application uses `vehicles.db` (SQLite). Tables include: -
-vehicles - mileage - maintenance
+The application uses:
+
+```
+vehicles.db
+```
+
+(SQLite database stored in the backend container.)
+
+Tables include:
+
+-   vehicles
+-   mileage
+-   maintenance
+
+## Frontend Files
+
+The frontend contains:
+
+### Templates
+
+HTML pages:
+
+-   home.html
+-   vehicles.html
+-   mileage.html
+-   maintenance.html
+
+### Static Files
+
+JavaScript:
+
+```
+static/js/
+```
+
+CSS:
+
+```
+static/css/
+```
+
+Maintenance service definitions:
+
+```
+maintenance_types.json
+```
 
 ## API
 
+Backend API endpoints:
+
 -   GET /api/vehicles
 -   POST /api/vehicles
--   DELETE /api/vehicles/`<id>`{=html}
+-   DELETE /api/vehicles/<id>
+
 -   GET /api/mileage
 -   POST /api/mileage
+
 -   GET /api/maintenance
 -   POST /api/maintenance
+
+Example:
+
+```
+http://localhost:5003/api/vehicles
+```
+
+## Development
+
+Source code is mounted into the containers:
+
+Backend:
+
+```
+./backend:/app
+```
+
+Frontend:
+
+```
+./frontend:/app
+```
+
+Changes to source files are available without rebuilding the images.
 
 ## License
 
