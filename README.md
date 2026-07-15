@@ -41,7 +41,7 @@ The application is separated into two Docker containers:
 │
 └── frontend/
     ├── Dockerfile
-    │
+    │── app.py
     ├── templates/
     │   ├── home.html
     │   ├── vehicles.html
@@ -49,14 +49,13 @@ The application is separated into two Docker containers:
     │   └── maintenance.html
     │
     └── static/
+        |── maintenance_types.json
         ├── css/
         │   └── style.css
         |
-        │── maintenance_types.json
-        |
         └── js/
             ├── api.js
-            ├── main.js
+            ├── home.js
             ├── maintenance.js
             ├── mileage.js
             ├── modal.js
@@ -104,11 +103,11 @@ docker compose down
 Frontend:
 
 ``` yaml
-5002:80
+5002:5000
 ```
 
 -   Port `5002` = host computer port
--   Port `80` = web server port inside frontend container
+-   Port `5003` = Flask port inside frontend container
 
 Backend:
 
