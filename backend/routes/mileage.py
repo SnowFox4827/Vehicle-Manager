@@ -1,13 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, request, jsonify
 
 from database import get_db
 
 mileage_bp = Blueprint("mileage", __name__)
-
-
-@mileage_bp.route("/mileage")
-def mileage_page():
-    return render_template("mileage.html")
 
 
 @mileage_bp.route("/api/mileage", methods=["GET"])
