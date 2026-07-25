@@ -41,6 +41,11 @@
                 {{ vehicle.date }}
             </p>
             {% endif %}
+
+            <div class="card-actions">
+                <a href="/mileage?vehicle={{ vehicle.vehicle_id }}"><button class="save">Mileage</button></a>
+                <a href="/maintenance?vehicle={{ vehicle.vehicle_id }}"><button class="edit">Maintenance</button></a>
+            </div>
         </div>
         {% else %}
         <p>No vehicles found.</p>

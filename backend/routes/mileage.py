@@ -36,7 +36,7 @@ def get_recent_mileage():
     conn = get_db()
     try:
         records = conn.execute("""
-            SELECT make, model, year, mileage, date
+            SELECT vehicle_id, make, model, year, mileage, date
             FROM (
                 SELECT
                     vehicles.id AS vehicle_id,

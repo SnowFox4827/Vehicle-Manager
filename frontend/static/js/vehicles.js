@@ -93,6 +93,17 @@ function clearVehicleForm() {
     document.getElementById("vin").value = "";
 }
 
+// Reads ?vehicle=<id> from the URL (set by the Mileage/Maintenance buttons
+// on the home dashboard cards) and preselects it in the filter dropdown.
+function applyVehicleFilterFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const vehicleId = params.get("vehicle");
+    const filterSelect = document.getElementById("filterVehicle");
+    if (vehicleId && filterSelect) {
+        filterSelect.value = vehicleId;
+    }
+}
+
 // Shared dropdown used by mileage.js and maintenance.js.
 // selectId: which <select> to populate (defaults to the add-record dropdown).
 // includeAllOption: when true, adds an "-- All Vehicles --" option (used by filter dropdowns).
