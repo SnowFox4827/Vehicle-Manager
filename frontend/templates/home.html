@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fleet Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <nav class="navbar">
@@ -41,12 +41,23 @@
                 {{ vehicle.date }}
             </p>
             {% endif %}
+
+            <div class="card-actions">
+                <a href="/mileage?vehicle={{ vehicle.vehicle_id }}"><button class="save">Mileage</button></a>
+                <a href="/maintenance?vehicle={{ vehicle.vehicle_id }}"><button class="edit">Maintenance</button></a>
+            </div>
         </div>
         {% else %}
         <p>No vehicles found.</p>
         {% endfor %}
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/vehicles.js"></script>
+    <script src="/static/js/mileage.js"></script>
+    <script src="/static/js/maintenance.js"></script>
+    <script src="/static/js/home.js"></script>
 </body>
 </html>
