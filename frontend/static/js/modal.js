@@ -25,12 +25,13 @@ function showEditModal(title, fields, onSave) {
     fields.forEach(f => {
         const div = document.createElement("div");
         div.className = "modal-field";
+        const safeValue = String(f.value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
         div.innerHTML = `
             <label>${f.label}</label>
             <input 
                 type="${f.type || 'text'}" 
                 id="modal_${f.id}" 
-                value="${f.value || ''}">
+                value="${safeValue}">
         `;
         container.appendChild(div);
     });

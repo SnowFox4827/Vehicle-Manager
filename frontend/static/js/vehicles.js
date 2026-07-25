@@ -17,7 +17,7 @@ async function loadVehicles() {
                 <td>${v.year || '-'}</td>
                 <td>${v.vin || '-'}</td>
                 <td>
-                    <button class="edit" onclick="editVehicle(${v.id}, '${v.make}', '${v.model}', '${v.year || ''}', '${v.vin || ''}')">Edit</button>
+                    <button class="edit" onclick="editVehicle(${v.id}, '${escAttr(v.make)}', '${escAttr(v.model)}', '${escAttr(v.year || '')}', '${escAttr(v.vin || '')}')">Edit</button>
                     <button class="delete" onclick="deleteVehicle(${v.id})">Delete</button>
                 </td>
             `;

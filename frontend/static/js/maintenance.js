@@ -96,7 +96,7 @@ async function loadMaintenance() {
                 <td>${r.description || ''}</td>
                 <td>${r.mileage ? Number(r.mileage).toLocaleString() + ' miles' : '-'}</td>
                 <td>
-                    <button class="edit" onclick="editMaintenance(${r.id}, '${r.service_date}', '${r.service_type}', '${(r.description || '').replace(/'/g, "\\'")}', ${r.mileage || null})">Edit</button>
+                    <button class="edit" onclick="editMaintenance(${r.id}, '${escAttr(r.service_date)}', '${escAttr(r.category)}', '${escAttr(r.service_type)}', '${escAttr(r.description)}', ${r.mileage || null})">Edit</button>
                     <button class="delete" onclick="deleteMaintenance(${r.id})">Delete</button>
                 </td>
             `;
@@ -107,12 +107,13 @@ async function loadMaintenance() {
     }
 }
 
-function editMaintenance(id, serviceDate, serviceType, description, mileage) {
+function editMaintenance(id, serviceDate, category, serviceType, description, mileage) {
     currentEditType = 'maintenance';
     currentEditId = id;
 
     showEditModal("Edit Maintenance", [
         { id: "service_date", label: "Service Date", type: "date", value: serviceDate },
+        { id: "category", label: "Category", value: category || "" },
         { id: "service_type", label: "Service Type", value: serviceType },
         { id: "description", label: "Description", value: description || "" },
         { id: "mileage", label: "Mileage at Service", type: "number", value: mileage || "" }
@@ -120,6 +121,7 @@ function editMaintenance(id, serviceDate, serviceType, description, mileage) {
         try {
             await apiRequest(`/api/maintenance/${currentEditId}`, "PUT", {
                 service_date: data.service_date,
+                category: data.category,
                 service_type: data.service_type,
                 description: data.description,
                 mileage: data.mileage ? parseInt(data.mileage) : null
