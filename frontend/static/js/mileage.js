@@ -1,5 +1,7 @@
 // ==================== Mileage Management ====================
 
+let allMileageRecords = [];
+
 async function saveMileage() {
     const vehicleId = document.getElementById("vehicle").value;
     const mileage = document.getElementById("mileage").value;
@@ -31,27 +33,42 @@ function clearMileageForm() {
 async function loadMileage() {
     try {
         const res = await apiRequest("/api/mileage");
-        const records = await res.json();
-        const tbody = document.querySelector("#mileageTable tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
-        records.forEach(r => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${r.make} ${r.model}</td>
-                <td>${Number(r.mileage).toLocaleString()} miles</td>
-                <td>${r.date}</td>
-                <td>
-                    <button class="edit" onclick="editMileage(${r.id}, ${r.mileage}, '${r.date}')">Edit</button>
-                    <button class="delete" onclick="deleteMileage(${r.id})">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
+        allMileageRecords = await res.json();
+        applyMileageFilter();
     } catch (e) {
         alert("Failed to load mileage records.");
     }
+}
+
+function applyMileageFilter() {
+    const filterSelect = document.getElementById("filterVehicle");
+    const vehicleId = filterSelect ? filterSelect.value : "";
+
+    const records = vehicleId
+        ? allMileageRecords.filter(r => String(r.vehicle_id) === String(vehicleId))
+        : allMileageRecords;
+
+    renderMileageRows(records);
+}
+
+function renderMileageRows(records) {
+    const tbody = document.querySelector("#mileageTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    records.forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${r.make} ${r.model}</td>
+            <td>${Number(r.mileage).toLocaleString()} miles</td>
+            <td>${r.date}</td>
+            <td>
+                <button class="edit" onclick="editMileage(${r.id}, ${r.mileage}, '${r.date}')">Edit</button>
+                <button class="delete" onclick="deleteMileage(${r.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function editMileage(id, mileage, date) {

@@ -93,15 +93,19 @@ function clearVehicleForm() {
     document.getElementById("vin").value = "";
 }
 
-// Shared dropdown used by mileage.js and maintenance.js
-async function loadVehiclesForDropdown() {
+// Shared dropdown used by mileage.js and maintenance.js.
+// selectId: which <select> to populate (defaults to the add-record dropdown).
+// includeAllOption: when true, adds an "-- All Vehicles --" option (used by filter dropdowns).
+async function loadVehiclesForDropdown(selectId = "vehicle", includeAllOption = false) {
     try {
         const res = await apiRequest("/api/vehicles");
         const vehicles = await res.json();
-        const select = document.getElementById("vehicle");
+        const select = document.getElementById(selectId);
         if (!select) return;
 
-        select.innerHTML = '<option value="">-- Select Vehicle --</option>';
+        select.innerHTML = includeAllOption
+            ? '<option value="">-- All Vehicles --</option>'
+            : '<option value="">-- Select Vehicle --</option>';
         vehicles.forEach(v => {
             const opt = document.createElement("option");
             opt.value = v.id;

@@ -1,6 +1,7 @@
 // ==================== Maintenance Management ====================
 
 let maintenanceTypes = {};
+let allMaintenanceRecords = [];
 
 async function loadMaintenanceTypes() {
     try {
@@ -81,30 +82,45 @@ function clearMaintenanceForm() {
 async function loadMaintenance() {
     try {
         const res = await apiRequest("/api/maintenance");
-        const records = await res.json();
-        const tbody = document.querySelector("#maintenanceTable tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
-        records.forEach(r => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${r.make} ${r.model}</td>
-                <td>${r.service_date}</td>
-                <td>${r.category || ''}</td>
-                <td>${r.service_type}</td>
-                <td>${r.description || ''}</td>
-                <td>${r.mileage ? Number(r.mileage).toLocaleString() + ' miles' : '-'}</td>
-                <td>
-                    <button class="edit" onclick="editMaintenance(${r.id}, '${escAttr(r.service_date)}', '${escAttr(r.category)}', '${escAttr(r.service_type)}', '${escAttr(r.description)}', ${r.mileage || null})">Edit</button>
-                    <button class="delete" onclick="deleteMaintenance(${r.id})">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
+        allMaintenanceRecords = await res.json();
+        applyMaintenanceFilter();
     } catch (e) {
         alert("Failed to load maintenance records.");
     }
+}
+
+function applyMaintenanceFilter() {
+    const filterSelect = document.getElementById("filterVehicle");
+    const vehicleId = filterSelect ? filterSelect.value : "";
+
+    const records = vehicleId
+        ? allMaintenanceRecords.filter(r => String(r.vehicle_id) === String(vehicleId))
+        : allMaintenanceRecords;
+
+    renderMaintenanceRows(records);
+}
+
+function renderMaintenanceRows(records) {
+    const tbody = document.querySelector("#maintenanceTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    records.forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${r.make} ${r.model}</td>
+            <td>${r.service_date}</td>
+            <td>${r.category || ''}</td>
+            <td>${r.service_type}</td>
+            <td>${r.description || ''}</td>
+            <td>${r.mileage ? Number(r.mileage).toLocaleString() + ' miles' : '-'}</td>
+            <td>
+                <button class="edit" onclick="editMaintenance(${r.id}, '${escAttr(r.service_date)}', '${escAttr(r.category)}', '${escAttr(r.service_type)}', '${escAttr(r.description)}', ${r.mileage || null})">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${r.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function editMaintenance(id, serviceDate, category, serviceType, description, mileage) {

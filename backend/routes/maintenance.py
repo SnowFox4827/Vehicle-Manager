@@ -12,6 +12,7 @@ def get_maintenance():
         records = conn.execute("""
             SELECT
                 maintenance.id,
+                maintenance.vehicle_id,
                 vehicles.make,
                 vehicles.model,
                 maintenance.service_date,
