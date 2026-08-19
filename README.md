@@ -1,236 +1,80 @@
-# Vehicle Management Application
+# Vehicle Fleet Manager
 
-## Overview
+A self-contained fleet management system for vehicles, mileage logging, and maintenance tracking with automated backups and light/dark theme support.
 
-A Flask and SQLite application for managing a fleet of vehicles,
-tracking mileage, and recording maintenance history.
+Built with an architecture identical to the **Budget Manager** app.
 
-The application is separated into two Docker containers:
-
--   Frontend: Web interface containing HTML templates, CSS, JavaScript, and frontend data files
--   Backend: Flask REST API with SQLite database
-
-## Features
-
--   Vehicle management (add, view, update, delete)
--   Mileage tracking
--   Maintenance tracking
--   Fleet dashboard showing each vehicle's most recent mileage
--   SQLite database
--   REST API backend
--   Separate frontend and backend containers
--   Docker and Docker Compose support
+---
 
 ## Project Structure
 
-``` text
-.
-├── docker-compose.yml
-│
+```
+Vehicle-Manager/
+├── .env.example              # Example environment variables
+├── .env                      # Live host environment configuration
+├── docker-compose.yml        # Docker composition (backend, frontend, backup daemon)
+├── Dockerfile.backup         # Standalone backup daemon container
+├── README.md                 # Documentation
 ├── backend/
-│   ├── app.py
-│   ├── database.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   ├── vehicles.db
-│   └── routes/
-│       ├── home.py
-│       ├── vehicles.py
-│       ├── mileage.py
-│       └── maintenance.py
-│
-└── frontend/
-    ├── Dockerfile
-    │── app.py
-    ├── templates/
-    │   ├── home.html
-    │   ├── vehicles.html
-    │   ├── mileage.html
-    │   └── maintenance.html
-    │
-    └── static/
-        |── maintenance_types.json
-        ├── css/
-        │   └── style.css
-        |
-        └── js/
-            ├── api.js
-            ├── home.js
-            ├── maintenance.js
-            ├── mileage.js
-            ├── modal.js
-            ├── state.js
-            └── vehicles.js
+│   ├── Dockerfile            # Backend container definition
+│   ├── requirements.txt      # Python dependencies (Flask)
+│   ├── app.py                # Backend entry point
+│   ├── data/                 # Persistent SQLite database storage (vehicles.db)
+│   └── app/
+│       ├── __init__.py       # Flask app factory
+│       ├── db.py             # SQLite connection & schema initialization
+│       └── routes/
+│           └── __init__.py   # REST API endpoints (Vehicles, Mileage, Maintenance, Backups)
+├── frontend/
+│   ├── Dockerfile            # Frontend container definition
+│   ├── requirements.txt      # Python dependencies (Flask, Requests)
+│   ├── app.py                # Reverse-proxy server & SPA host
+│   └── app/
+│       ├── index.html        # Single-page interface (SPA)
+│       └── static/
+│           ├── css/
+│           │   └── styles.css # Clean light/dark UI design
+│           └── js/
+│               └── main.js   # Fast client-side state & interactive filtering
+├── backups/                  # Automated hourly/daily snapshot storage
+└── scripts/
+    └── backup.py             # SQLite backup runner, JSON exporter, & checksum generator
 ```
 
-## Requirements
+---
 
--   Docker and Docker Compose (recommended)
+## Quick Start (Docker)
 
-Or:
+1. **Configure Environment:**
+   ```bash
+   cp .env.example .env
+   ```
 
--   Python 3.11+
--   pip
+2. **Start Services:**
+   ```bash
+   docker compose up -d --build
+   ```
 
-## Run with Docker Compose
+3. **Access the App:**
+   - Web UI: `http://localhost:8080` (or the port defined by `HOST_PORT` in `.env`)
+   - Direct API (optional): `http://localhost:5000`
 
-Build and start containers:
+---
 
-``` bash
-docker compose up -d --build
-```
+## Running Locally Without Docker
 
-Frontend:
+1. **Start Backend:**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python app.py
+   ```
 
-```
-http://localhost:5002
-```
+2. **Start Frontend:**
+   ```bash
+   cd frontend
+   pip install -r requirements.txt
+   BACKEND_URL=http://localhost:5000 PORT=8080 python app.py
+   ```
 
-Backend API:
-
-```
-http://localhost:5003
-```
-
-Stop:
-
-``` bash
-docker compose down
-```
-
-## Docker Port Mapping
-
-Frontend:
-
-``` yaml
-5002:5000
-```
-
--   Port `5002` = host computer port
--   Port `5000` = Flask port inside frontend container
-
-Backend:
-
-``` yaml
-5003:5002
-```
-
--   Port `5003` = host computer port
--   Port `5002` = Flask port inside backend container
-
-## Run Backend Without Docker
-
-Install dependencies:
-
-``` bash
-pip install -r requirements.txt
-```
-
-Start:
-
-``` bash
-python app.py
-```
-
-Backend runs on:
-
-```
-http://localhost:5002
-```
-
-## Database
-
-The application uses:
-
-```
-vehicles.db
-```
-
-(SQLite database stored in the backend container.)
-
-Tables include:
-
--   vehicles
--   mileage
--   maintenance
-
-## Frontend Files
-
-The frontend contains:
-
-### Templates
-
-HTML pages:
-
--   home.html
--   vehicles.html
--   mileage.html
--   maintenance.html
-
-### Static Files
-
-JavaScript:
-
-```
-static/js/
-```
-
-CSS:
-
-```
-static/css/
-```
-
-Maintenance service definitions:
-
-```
-maintenance_types.json
-```
-
-## API
-
-Backend API endpoints:
-
--   GET /api/vehicles
--   POST /api/vehicles
--   PUT /api/vehicles/<id>
--   DELETE /api/vehicles/<id>
-
--   GET /api/mileage
--   GET /api/mileage/recent
--   POST /api/mileage
--   PUT /api/mileage/<id>
--   DELETE /api/mileage/<id>
-
--   GET /api/maintenance
--   POST /api/maintenance
--   PUT /api/maintenance/<id>
--   DELETE /api/maintenance/<id>
-
-Example:
-
-```
-http://localhost:5003/api/vehicles
-```
-
-## Development
-
-Source code is mounted into the containers:
-
-Backend:
-
-```
-./backend:/app
-```
-
-Frontend:
-
-```
-./frontend:/app
-```
-
-Changes to source files are available without rebuilding the images.
-
-## License
-
-For educational and personal use.
+3. Open `http://localhost:8080` in your browser.

@@ -1,44 +1,79 @@
-from flask import Flask, render_template
+from flask import Flask, request, send_from_directory, jsonify, Response
 import requests
+import os
+
+# Paths
+HERE = os.path.dirname(os.path.abspath(__file__))
+APP_DIR = os.path.join(HERE, 'app')          # holds index.html
+STATIC_DIR = os.path.join(APP_DIR, 'static')
+
+# Backend container hostname (docker-compose service name)
+BACKEND_URL = os.environ.get('BACKEND_URL', 'http://localhost:5000')
 
 app = Flask(__name__)
-
-BACKEND_URL = "http://backend:5002"
-
-
-@app.route("/")
-def home():
-
-    response = requests.get(
-        f"{BACKEND_URL}/api/mileage/recent"
-    )
-
-    recent_mileage = response.json()
-
-    return render_template(
-        "home.html",
-        recent_mileage=recent_mileage
-    )
+session = requests.Session()
 
 
-@app.route("/vehicles")
-def vehicles():
-    return render_template("vehicles.html")
+@app.route('/')
+def index():
+    return send_from_directory(APP_DIR, 'index.html')
 
 
-@app.route("/mileage")
-def mileage():
-    return render_template("mileage.html")
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(STATIC_DIR, filename)
 
 
-@app.route("/maintenance")
-def maintenance():
-    return render_template("maintenance.html")
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, 'js'), filename)
 
 
-if __name__ == "__main__":
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    return send_from_directory(os.path.join(STATIC_DIR, 'css'), filename)
+
+
+@app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def proxy_api(path):
+    url = f"{BACKEND_URL}/api/{path}"
+    headers = {k: v for k, v in request.headers if k.lower() != 'host'}
+
+    try:
+        if request.method == 'GET':
+            resp = session.get(url, params=request.args, headers=headers, timeout=10)
+        elif request.method == 'POST':
+            resp = session.post(url, json=request.get_json(silent=True), data=request.get_data() if not request.is_json else None, headers=headers, timeout=10)
+        elif request.method == 'PUT':
+            resp = session.put(url, json=request.get_json(silent=True), headers=headers, timeout=10)
+        elif request.method == 'DELETE':
+            resp = session.delete(url, headers=headers, timeout=10)
+        else:
+            return jsonify({'error': 'Method not allowed'}), 405
+
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        resp_headers = [(name, value) for (name, value) in resp.raw.headers.items()
+                        if name.lower() not in excluded_headers]
+
+        return Response(resp.content, resp.status_code, resp_headers)
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'Backend unavailable: {str(e)}'}), 502
+
+
+@app.route('/api/health')
+def health():
+    return jsonify({'status': 'ok-frontend'})
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return ('', 204)
+
+
+if __name__ == '__main__':
     app.run(
-        host="0.0.0.0",
-        port=5000,
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 80)),
         debug=True
     )

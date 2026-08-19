@@ -16,20 +16,24 @@
 
     <h1>Vehicle Management</h1>
 
-    <div class="form-container">
-        <div class="form">
+    <div class="form-card">
+        <h2>Add Vehicle</h2>
+        <form onsubmit="event.preventDefault(); saveVehicle();">
             <input type="hidden" id="vehicle_id">
-            <input id="make" placeholder="Make" required>
-            <input id="model" placeholder="Model" required>
-            <input id="year" type="number" placeholder="Year">
-            <input id="vin" placeholder="VIN">
-            
-            <button class="save" onclick="saveVehicle()">Save Vehicle</button>
-            <button class="cancel" onclick="clearVehicleForm()">Clear Form</button>
-        </div>
+            <div class="form-row">
+                <input type="text" id="make" placeholder="Make (e.g. Toyota)" required>
+                <input type="text" id="model" placeholder="Model (e.g. Camry)" required>
+            </div>
+            <div class="form-row">
+                <input type="number" id="year" placeholder="Year (e.g. 2020)">
+                <input type="text" id="vin" placeholder="VIN (optional)">
+            </div>
+            <div class="btn-group">
+                <button type="submit">Add Vehicle</button>
+            </div>
+        </form>
     </div>
 
-    <div class="table-wrap">
     <table id="vehicleTable">
         <thead>
             <tr>
@@ -41,13 +45,31 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+            {% for v in initial_vehicles %}
+            <tr>
+                <td>{{ v.id }}</td>
+                <td>{{ v.make }}</td>
+                <td>{{ v.model }}</td>
+                <td>{{ v.year or '-' }}</td>
+                <td>{{ v.vin or '-' }}</td>
+                <td>
+                    <button class="edit" onclick="editVehicle({{ v.id }}, '{{ v.make|replace("'", "\\'") }}', '{{ v.model|replace("'", "\\'") }}', '{{ (v.year or "")|string }}', '{{ v.vin or "" }}')">Edit</button>
+                    <button class="delete" onclick="deleteVehicle({{ v.id }})">Delete</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; opacity:0.6;">No vehicles found. Add one above.</td></tr>
+            {% endfor %}
+        </tbody>
     </table>
-    </div>
 
-    <script src="/static/js/state.js"></script>
+    <script>
+        window.INITIAL_VEHICLES = {{ initial_vehicles|tojson|safe }};
+    </script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/modal.js"></script>
+    <script src="/static/js/state.js"></script>
     <script src="/static/js/vehicles.js"></script>
     <script src="/static/js/mileage.js"></script>
     <script src="/static/js/maintenance.js"></script>

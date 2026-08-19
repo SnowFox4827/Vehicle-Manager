@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Fleet Manager</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="flex between wrap gap-2 mb-4">
+        <div>
+            <h1 class="page-title m-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M2.52 3.515A2.5 2.5 0 0 1 4.82 2h6.362c1 0 1.904.596 2.298 1.515l.792 1.848c.075.175.21.319.38.404.5.25.85.76.85 1.353v4.38a1.5 1.5 0 0 1-1.5 1.5H15v1a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H5v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1h-.5A1.5 1.5 0 0 1 0 11.5V7.12c0-.593.35-1.104.85-1.353.17-.085.305-.229.38-.404l.79-1.848zM3 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM2.5 7a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-11z"/></svg>
+                Vehicle Manager
+            </h1>
+            <p class="subtitle m-0">Fleet, Mileage &amp; Maintenance Tracking System</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="showBackupModal()" title="Database Backup & Export">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                Backup
+            </button>
+            <label class="theme-switch" title="Toggle light / dark theme" aria-label="Toggle theme">
+                <input type="checkbox" id="theme-toggle" onclick="toggleTheme()">
+                <span class="theme-track">
+                    <svg class="theme-sun" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM3.343 4.05a.5.5 0 0 1-.707 0L1.05 2.636a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707z"/></svg>
+                    <svg class="theme-moon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 9 16A8 8 0 0 1 6 .8z"/></svg>
+                    <span class="theme-thumb"></span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-cards">
+        <div class="stat-card border-blue">
+            <div class="stat-label">Total Vehicles</div>
+            <div class="stat-value blue" id="sum-vehicles">0</div>
+            <div class="stat-sub">Active fleet count</div>
+        </div>
+        <div class="stat-card border-green">
+            <div class="stat-label">Fleet Miles</div>
+            <div class="stat-value green" id="sum-miles">0 mi</div>
+            <div class="stat-sub">Cumulative odometer reading</div>
+        </div>
+        <div class="stat-card border-purple">
+            <div class="stat-label">Total Services</div>
+            <div class="stat-value purple" id="sum-services">0</div>
+            <div class="stat-sub">Recorded maintenance events</div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-pills" role="tablist">
+        <button class="tab-btn active" data-tab="vehicles-sec" onclick="switchTab('vehicles-sec')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.52 3.515A2.5 2.5 0 0 1 4.82 2h6.362c1 0 1.904.596 2.298 1.515l.792 1.848c.075.175.21.319.38.404.5.25.85.76.85 1.353v4.38a1.5 1.5 0 0 1-1.5 1.5H15v1a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H5v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1h-.5A1.5 1.5 0 0 1 0 11.5V7.12c0-.593.35-1.104.85-1.353.17-.085.305-.229.38-.404l.79-1.848zM3 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm10 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM2.5 7a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-11z"/></svg>
+            Vehicles
+        </button>
+        <button class="tab-btn" data-tab="mileage-sec" onclick="switchTab('mileage-sec')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+            Mileage
+        </button>
+        <button class="tab-btn" data-tab="maintenance-sec" onclick="switchTab('maintenance-sec')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3c0-.269-.035-.53-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.103a3 3 0 0 0-3.675 3.68L7.462 6.46 4.79 3.79a1 1 0 0 1-.293-.707v-.07a1 1 0 0 0-.419-.814L1 0z"/></svg>
+            Maintenance
+        </button>
+    </div>
+
+    <!-- VEHICLES SECTION -->
+    <div class="tab-pane active" id="vehicles-sec">
+        <div class="section-head">
+            <div class="left">
+                <h5 class="section-title">Fleet Vehicles</h5>
+            </div>
+            <div class="right">
+                <button class="btn btn-sm btn-primary" onclick="showAddVehicleModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                    Add Vehicle
+                </button>
+            </div>
+        </div>
+        <div class="view-toolbar">
+            <div class="toggle-group">
+                <button type="button" class="toggle-btn active" id="veh-view-grid" title="Card view" onclick="setVehicleView('grid')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm8 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V2zM1 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-4zm8 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-4z"/></svg></button>
+                <button type="button" class="toggle-btn" id="veh-view-list" title="List view" onclick="setVehicleView('list')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg></button>
+            </div>
+        </div>
+        <div class="cards-grid" id="vehicles-container"></div>
+        <div class="table-wrap" id="vehicles-table-wrap" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Make &amp; Model</th>
+                        <th>Year</th>
+                        <th>VIN</th>
+                        <th class="text-end">Latest Mileage</th>
+                        <th class="text-end">Services</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="vehicles-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MILEAGE SECTION -->
+    <div class="tab-pane" id="mileage-sec">
+        <div class="section-head">
+            <div class="left">
+                <h5 class="section-title">Mileage History</h5>
+            </div>
+            <div class="right">
+                <button class="btn btn-sm btn-primary" onclick="showAddMileageModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                    Log Mileage
+                </button>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <div class="card-body">
+                <div class="filters">
+                    <select id="slice-mileage-vehicle" onchange="filterMileage()"><option value="">All Vehicles</option></select>
+                    <select id="slice-mileage-preset" onchange="filterMileage()">
+                        <option value="">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="this-month">This Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="this-year">This Year</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th class="text-end">Mileage</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mileage-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAINTENANCE SECTION -->
+    <div class="tab-pane" id="maintenance-sec">
+        <div class="section-head">
+            <div class="left">
+                <h5 class="section-title">Maintenance Records</h5>
+            </div>
+            <div class="right">
+                <button class="btn btn-sm btn-primary" onclick="showAddMaintenanceModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                    Log Maintenance
+                </button>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <div class="card-body">
+                <div class="filters">
+                    <select id="slice-maint-vehicle" onchange="filterMaintenance()"><option value="">All Vehicles</option></select>
+                    <select id="slice-maint-type" onchange="filterMaintenance()"><option value="">All Types</option></select>
+                    <input type="text" id="slice-maint-search" placeholder="Search description..." oninput="filterMaintenance()">
+                    <select id="slice-maint-preset" onchange="filterMaintenance()">
+                        <option value="">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="this-month">This Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="this-year">This Year</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th>Service Type</th>
+                            <th>Description</th>
+                            <th class="text-end">Mileage at Service</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maintenance-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Vehicle Modal -->
+<div class="modal" id="vehicleModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vehicleModalTitle">Add Vehicle</h5>
+                <button type="button" class="btn-close" onclick="closeModal('vehicleModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="vehicleForm">
+                    <input type="hidden" id="veh-id">
+                    <div class="form-group">
+                        <label>Make</label>
+                        <input type="text" id="veh-make" placeholder="e.g. Toyota" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="veh-model" placeholder="e.g. Camry" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Year</label>
+                        <input type="number" id="veh-year" placeholder="e.g. 2022">
+                    </div>
+                    <div class="form-group">
+                        <label>VIN (Optional)</label>
+                        <input type="text" id="veh-vin" placeholder="17-character VIN">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Vehicle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Mileage Modal -->
+<div class="modal" id="mileageModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mileageModalTitle">Log Mileage</h5>
+                <button type="button" class="btn-close" onclick="closeModal('mileageModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="mileageForm">
+                    <input type="hidden" id="mile-id">
+                    <div class="form-group">
+                        <label>Vehicle</label>
+                        <select id="mile-vehicle-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mileage (miles)</label>
+                        <input type="number" id="mile-amount" placeholder="e.g. 45000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="mile-date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Mileage</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Maintenance Modal -->
+<div class="modal" id="maintenanceModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maintenanceModalTitle">Log Maintenance</h5>
+                <button type="button" class="btn-close" onclick="closeModal('maintenanceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="maintenanceForm">
+                    <input type="hidden" id="maint-id">
+                    <div class="form-group">
+                        <label>Vehicle</label>
+                        <select id="maint-vehicle-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Type</label>
+                        <select id="maint-type-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="maint-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mileage at Service (miles)</label>
+                        <input type="number" id="maint-mileage" placeholder="e.g. 45000">
+                    </div>
+                    <div class="form-group">
+                        <label>Description / Notes</label>
+                        <input type="text" id="maint-desc" placeholder="e.g. Full synthetic 5W-30 & OEM filter">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Maintenance</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Modal -->
+<div class="modal" id="backupModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title flex align-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                    Database Backup &amp; Export
+                </h5>
+                <button type="button" class="btn-close" onclick="closeModal('backupModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="backup-status-card mb-3" id="backup-status-box">
+                    <div class="small text-muted mb-1">Automated Snapshot Status</div>
+                    <div class="fw-semibold" id="backup-last-time">Loading status...</div>
+                    <div class="small text-muted mt-1" id="backup-total-count"></div>
+                </div>
+
+                <div class="backup-actions flex col gap-2">
+                    <button type="button" class="btn btn-outline-secondary w-100 flex center gap-2" onclick="downloadBackup('json')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                        Download JSON Data Export (.json)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary w-100 flex center gap-2" onclick="downloadBackup('db')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1.5a.5.5 0 0 1-1 0V11a.5.5 0 0 1 1 0Zm0 3a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path d="M12.096 6.223A4.92 4.92 0 0 0 13 5.698V7c0 .289-.213.654-.753.982A12.31 12.31 0 0 1 10 8.482V7.126a11.192 11.192 0 0 0 2.096-.903Z"/><path d="M2.5 4v1.5C2.5 6.88 5.858 8 10 8c.577 0 1.136-.021 1.666-.062a4.992 4.992 0 0 1-.666-1.42c-.328.031-.66.05-.999.05-3.642 0-6.5-1.02-6.5-2.068V4Z"/><path d="M10 0C5.858 0 2.5 1.12 2.5 2.5S5.858 5 10 5s7.5-1.12 7.5-2.5S14.142 0 10 0Z"/></svg>
+                        Download SQLite Binary (.db)
+                    </button>
+                    <button type="button" class="btn btn-primary w-100 flex center gap-2" id="btn-trigger-snapshot" onclick="triggerServerSnapshot()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+                        Create Instant Snapshot on NAS / Server
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

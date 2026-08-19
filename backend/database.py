@@ -1,17 +1,21 @@
+import os
 import sqlite3
 
-DATABASE = "vehicles.db"
+DATA_DIR = os.environ.get("DATA_DIR", ".")
+DATABASE = os.path.join(DATA_DIR, "vehicles.db")
 
 
 def get_db():
     """Get database connection with row factory enabled."""
+    if DATA_DIR and DATA_DIR != ".":
+        os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    """Initialize database tables."""
+    """Initialize database tables and run lightweight migrations."""
     conn = get_db()
     try:
         conn.execute("PRAGMA foreign_keys = ON;")
@@ -44,10 +48,17 @@ def init_db():
                 category TEXT,
                 service_type TEXT,
                 description TEXT,
+                cost REAL,
                 mileage INTEGER,
-                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id)
+                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
             )
         """)
+
+        # Migration helper: ensure `cost` column exists if database was created by an older schema
+        cols = [c["name"] for c in conn.execute("PRAGMA table_info(maintenance)").fetchall()]
+        if "cost" not in cols:
+            conn.execute("ALTER TABLE maintenance ADD COLUMN cost REAL")
+
         conn.commit()
     finally:
         conn.close()
