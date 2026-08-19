@@ -1,86 +1,70 @@
 // ==================== Maintenance Management ====================
 
-let maintenanceTypes = {};
 let allMaintenanceRecords = [];
+let maintenanceTypesList = [];
 
 async function loadMaintenanceTypes() {
     try {
-        const res = await apiRequest("/static/maintenance_types.json");
-        maintenanceTypes = await res.json();
-        populateMaintenanceCategories();
-    } catch (e) {
-        console.error("Failed to load maintenance types.", e);
-    }
-}
+        const res = await apiRequest("/api/maintenance/types");
+        maintenanceTypesList = await res.json();
+        const select = document.getElementById("type");
+        if (!select) return;
 
-function populateMaintenanceCategories() {
-    const dropdown = document.getElementById("service_category");
-
-    dropdown.innerHTML = `<option value="">-- Select Category --</option>`;
-
-    Object.keys(maintenanceTypes)
-        .sort()
-        .forEach(category => {
-            dropdown.innerHTML += `<option value="${category}">${category}</option>`;
+        select.innerHTML = '<option value="">-- Select Type --</option>';
+        maintenanceTypesList.forEach(t => {
+            const opt = document.createElement("option");
+            opt.value = t;
+            opt.textContent = t;
+            select.appendChild(opt);
         });
-}
-
-function loadServices() {
-    const category = document.getElementById("service_category").value;
-    const dropdown = document.getElementById("service_type");
-
-    dropdown.innerHTML = `<option value="">-- Select Service --</option>`;
-
-    if (!category) {
-        return;
+    } catch (e) {
+        console.error(e);
     }
-
-    maintenanceTypes[category].forEach(service => {
-        dropdown.innerHTML += `<option value="${service}">${service}</option>`;
-    });
 }
 
 async function saveMaintenance() {
     const vehicleId = document.getElementById("vehicle").value;
-    const serviceDate = document.getElementById("service_date").value;
-    const category = document.getElementById("service_category").value;
-    const serviceType = document.getElementById("service_type").value.trim();
-    const description = document.getElementById("description").value.trim();
-    const mileage = document.getElementById("maintenance_mileage").value;
+    const type = document.getElementById("type").value;
+    const description = document.getElementById("description").value;
+    const cost = document.getElementById("cost").value;
+    const date = document.getElementById("date").value;
+    const mileageAtService = document.getElementById("mileage_at_service").value;
 
-    if (!vehicleId || !serviceDate || !category || !serviceType) {
-        alert("Please fill required fields.");
+    if (!vehicleId || !type || !date) {
+        alert("Vehicle, Maintenance Type, and Date are required.");
         return;
     }
 
     try {
         await apiRequest("/api/maintenance", "POST", {
             vehicle_id: parseInt(vehicleId),
-            service_date: serviceDate,
-            category: category,
-            service_type: serviceType,
+            type: type,
             description: description || null,
-            mileage: mileage ? parseInt(mileage) : null
+            cost: cost ? parseFloat(cost) : null,
+            date: date,
+            mileage_at_service: mileageAtService ? parseInt(mileageAtService) : null
         });
-
         clearMaintenanceForm();
         loadMaintenance();
     } catch (e) {
-        console.error(e);
         alert("Failed to add maintenance record.");
     }
 }
 
 function clearMaintenanceForm() {
-    document.getElementById("service_date").value = "";
-    document.getElementById("service_category").value = "";
-    document.getElementById("service_type").innerHTML = `<option value="">-- Select Service --</option>`;
     document.getElementById("description").value = "";
-    document.getElementById("maintenance_mileage").value = "";
+    document.getElementById("cost").value = "";
+    document.getElementById("date").value = "";
+    document.getElementById("mileage_at_service").value = "";
+    document.getElementById("type").selectedIndex = 0;
 }
 
 async function loadMaintenance() {
     try {
+        const tbody = document.querySelector("#maintenanceTable tbody");
+        if (tbody && allMaintenanceRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; opacity:0.6;">Loading maintenance records...</td></tr>';
+        }
         const res = await apiRequest("/api/maintenance");
         allMaintenanceRecords = await res.json();
         applyMaintenanceFilter();
@@ -92,69 +76,115 @@ async function loadMaintenance() {
 function applyMaintenanceFilter() {
     const filterSelect = document.getElementById("filterVehicle");
     const vehicleId = filterSelect ? filterSelect.value : "";
-
-    const records = vehicleId
-        ? allMaintenanceRecords.filter(r => String(r.vehicle_id) === String(vehicleId))
-        : allMaintenanceRecords;
-
-    renderMaintenanceRows(records);
-}
-
-function renderMaintenanceRows(records) {
     const tbody = document.querySelector("#maintenanceTable tbody");
     if (!tbody) return;
+
     tbody.innerHTML = "";
 
-    records.forEach(r => {
+    const filtered = vehicleId
+        ? allMaintenanceRecords.filter(m => String(m.vehicle_id) === String(vehicleId))
+        : allMaintenanceRecords;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; opacity:0.6;">No maintenance records found.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(m => {
         const row = document.createElement("tr");
+        const vehicleLabel = `${m.year || ''} ${m.make} ${m.model}`.trim();
+        const costLabel = m.cost !== null ? `$${parseFloat(m.cost).toFixed(2)}` : "-";
+        const milesLabel = m.mileage_at_service ? `${Number(m.mileage_at_service).toLocaleString()} mi` : "-";
+
         row.innerHTML = `
-            <td>${r.make} ${r.model}</td>
-            <td>${r.service_date}</td>
-            <td>${r.category || ''}</td>
-            <td>${r.service_type}</td>
-            <td>${r.description || ''}</td>
-            <td>${r.mileage ? Number(r.mileage).toLocaleString() + ' miles' : '-'}</td>
+            <td>${m.id}</td>
+            <td>${vehicleLabel}</td>
+            <td>${m.type}</td>
+            <td>${m.description || '-'}</td>
+            <td>${costLabel}</td>
+            <td>${m.date}</td>
+            <td>${milesLabel}</td>
             <td>
-                <button class="edit" onclick="editMaintenance(${r.id}, '${escAttr(r.service_date)}', '${escAttr(r.category)}', '${escAttr(r.service_type)}', '${escAttr(r.description)}', ${r.mileage || null})">Edit</button>
-                <button class="delete" onclick="deleteMaintenance(${r.id})">Delete</button>
+                <button class="edit" onclick="editMaintenance(${m.id}, ${m.vehicle_id}, '${escAttr(m.type)}', '${escAttr(m.description || '')}', '${m.cost !== null ? m.cost : ''}', '${m.date}', '${m.mileage_at_service || ''}')">Edit</button>
+                <button class="delete" onclick="deleteMaintenance(${m.id})">Delete</button>
             </td>
         `;
         tbody.appendChild(row);
     });
 }
 
-function editMaintenance(id, serviceDate, category, serviceType, description, mileage) {
-    currentEditType = 'maintenance';
-    currentEditId = id;
-
-    showEditModal("Edit Maintenance", [
-        { id: "service_date", label: "Service Date", type: "date", value: serviceDate },
-        { id: "category", label: "Category", value: category || "" },
-        { id: "service_type", label: "Service Type", value: serviceType },
-        { id: "description", label: "Description", value: description || "" },
-        { id: "mileage", label: "Mileage at Service", type: "number", value: mileage || "" }
-    ], async (data) => {
-        try {
-            await apiRequest(`/api/maintenance/${currentEditId}`, "PUT", {
-                service_date: data.service_date,
-                category: data.category,
-                service_type: data.service_type,
-                description: data.description,
-                mileage: data.mileage ? parseInt(data.mileage) : null
-            });
-            loadMaintenance();
-        } catch (e) {
-            alert("Failed to update maintenance record.");
+function applyVehicleFilterFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const vehicleId = params.get("vehicle");
+    if (vehicleId) {
+        const filterSelect = document.getElementById("filterVehicle");
+        if (filterSelect) {
+            filterSelect.value = vehicleId;
+            applyMaintenanceFilter();
         }
+    }
+}
+
+function editMaintenance(id, currentVehicleId, currentType, currentDesc, currentCost, currentDate, currentMileage) {
+    getVehiclesList().then(vehicles => {
+        const vehicleOptions = vehicles.map(v =>
+            `<option value="${v.id}" ${v.id === currentVehicleId ? "selected" : ""}>${v.year || ''} ${v.make} ${v.model}</option>`
+        ).join("");
+
+        const typeOptions = maintenanceTypesList.map(t =>
+            `<option value="${t}" ${t === currentType ? "selected" : ""}>${t}</option>`
+        ).join("");
+
+        showEditModal(
+            "Edit Maintenance Record",
+            [
+                { label: "Vehicle", id: "edit_m_vehicle", type: "select", optionsHtml: vehicleOptions },
+                { label: "Type", id: "edit_m_type", type: "select", optionsHtml: typeOptions },
+                { label: "Description", id: "edit_m_desc", value: currentDesc },
+                { label: "Cost ($)", id: "edit_m_cost", type: "number", value: currentCost, step: "0.01" },
+                { label: "Date", id: "edit_m_date", type: "date", value: currentDate, required: true },
+                { label: "Mileage at Service", id: "edit_m_mileage", type: "number", value: currentMileage }
+            ],
+            async () => {
+                const vehicle_id = parseInt(document.getElementById("edit_m_vehicle").value);
+                const type = document.getElementById("edit_m_type").value;
+                const description = document.getElementById("edit_m_desc").value;
+                const cost = document.getElementById("edit_m_cost").value;
+                const date = document.getElementById("edit_m_date").value;
+                const mileage_at_service = document.getElementById("edit_m_mileage").value;
+
+                if (!vehicle_id || !type || !date) {
+                    alert("Vehicle, Type, and Date are required.");
+                    return false;
+                }
+
+                try {
+                    await apiRequest(`/api/maintenance/${id}`, "PUT", {
+                        vehicle_id,
+                        type,
+                        description: description || null,
+                        cost: cost ? parseFloat(cost) : null,
+                        date,
+                        mileage_at_service: mileage_at_service ? parseInt(mileage_at_service) : null
+                    });
+                    loadMaintenance();
+                    return true;
+                } catch (e) {
+                    alert("Failed to update maintenance record.");
+                    return false;
+                }
+            }
+        );
     });
 }
 
 async function deleteMaintenance(id) {
-    if (!confirm("Delete this maintenance record?")) return;
+    if (!confirm("Are you sure you want to delete this maintenance record?")) return;
+
     try {
         await apiRequest(`/api/maintenance/${id}`, "DELETE");
         loadMaintenance();
     } catch (e) {
-        alert("Failed to delete record.");
+        alert("Failed to delete maintenance record.");
     }
 }

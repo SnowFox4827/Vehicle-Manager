@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance Tracking</title>
+    <title>Maintenance Log</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -14,76 +14,91 @@
         <a href="/maintenance">Maintenance</a>
     </nav>
 
-    <h1>Maintenance Tracking</h1>
+    <h1>Maintenance Log</h1>
 
-    <div class="form-container">
-        <div class="form">
-            <select id="vehicle" required></select>
-            
-            <input 
-                id="service_date" 
-                type="date" 
-                required>
-            
-            <!-- Service Category -->
-
-            <select id="service_category" onchange="loadServices()">
-
-                <option value="">
-                    -- Select Category --
-                </option>
-
-            </select>
-
-
-            <select id="service_type">
-
-                <option value="">
-                    -- Select Service --
-                </option>
-
-            </select>
-            
-            <input 
-                id="description" 
-                placeholder="Additional notes">
-            
-            <input 
-                id="maintenance_mileage" 
-                type="number" 
-                placeholder="Mileage at Service">
-            
-            <button class="save" onclick="saveMaintenance()">Add Maintenance Record</button>
-        </div>
+    <div class="form-card">
+        <h2>Log Maintenance</h2>
+        <form onsubmit="event.preventDefault(); saveMaintenance();">
+            <div class="form-row">
+                <select id="vehicle" required>
+                    <option value="">-- Select Vehicle --</option>
+                    {% for v in initial_vehicles %}
+                    <option value="{{ v.id }}">{{ (v.year ~ ' ' if v.year else '') ~ v.make ~ ' ' ~ v.model }}</option>
+                    {% endfor %}
+                </select>
+                <select id="type" required>
+                    <option value="">-- Select Type --</option>
+                    {% for t in initial_types %}
+                    <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="description" placeholder="Description (optional)">
+                <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
+            </div>
+            <div class="form-row">
+                <input type="date" id="date" required>
+                <input type="number" id="mileage_at_service" placeholder="Mileage at service (optional)">
+            </div>
+            <div class="btn-group">
+                <button type="submit">Log Maintenance</button>
+            </div>
+        </form>
     </div>
 
-    <div class="form-container">
-        <div class="form">
-            <label for="filterVehicle" style="align-self:center;">Filter by Vehicle:</label>
-            <select id="filterVehicle" onchange="applyMaintenanceFilter()"></select>
-        </div>
+    <div class="filter-bar">
+        <label for="filterVehicle">Filter by Vehicle: </label>
+        <select id="filterVehicle" onchange="applyMaintenanceFilter()">
+            <option value="">-- All Vehicles --</option>
+            {% for v in initial_vehicles %}
+            <option value="{{ v.id }}">{{ (v.year ~ ' ' if v.year else '') ~ v.make ~ ' ' ~ v.model }}</option>
+            {% endfor %}
+        </select>
     </div>
 
-    <div class="table-wrap">
     <table id="maintenanceTable">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Vehicle</th>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Service</th>
+                <th>Type</th>
                 <th>Description</th>
-                <th>Mileage</th>
+                <th>Cost</th>
+                <th>Date</th>
+                <th>Mileage at Service</th>
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+            {% for m in initial_maintenance %}
+            <tr>
+                <td>{{ m.id }}</td>
+                <td>{{ (m.year ~ ' ' if m.year else '') ~ m.make ~ ' ' ~ m.model }}</td>
+                <td>{{ m.type }}</td>
+                <td>{{ m.description or '-' }}</td>
+                <td>{{ "${:,.2f}".format(m.cost) if m.cost is not none else '-' }}</td>
+                <td>{{ m.date }}</td>
+                <td>{{ "{:,}".format(m.mileage_at_service) ~ " mi" if m.mileage_at_service is not none else '-' }}</td>
+                <td>
+                    <button class="edit" onclick="editMaintenance({{ m.id }}, {{ m.vehicle_id }}, '{{ m.type|replace("'", "\\'") }}', '{{ (m.description or "")|replace("'", "\\'") }}', '{{ m.cost if m.cost is not none else "" }}', '{{ m.date }}', '{{ m.mileage_at_service if m.mileage_at_service is not none else "" }}')">Edit</button>
+                    <button class="delete" onclick="deleteMaintenance({{ m.id }})">Delete</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; opacity:0.6;">No maintenance records found.</td></tr>
+            {% endfor %}
+        </tbody>
     </table>
-    </div>
 
-    <script src="/static/js/state.js"></script>
+    <script>
+        window.INITIAL_VEHICLES = {{ initial_vehicles|tojson|safe }};
+        window.INITIAL_TYPES = {{ initial_types|tojson|safe }};
+        window.INITIAL_MAINTENANCE = {{ initial_maintenance|tojson|safe }};
+    </script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/modal.js"></script>
+    <script src="/static/js/state.js"></script>
     <script src="/static/js/vehicles.js"></script>
     <script src="/static/js/mileage.js"></script>
     <script src="/static/js/maintenance.js"></script>

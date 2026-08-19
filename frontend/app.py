@@ -7,42 +7,84 @@ app = Flask(__name__)
 # Backend container hostname / fallback
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000")
 
+# Persistent connection pool for fast proxying
+session = requests.Session()
+
 
 @app.route("/")
 def home():
     try:
-        response = requests.get(
-            f"{BACKEND_URL}/api/mileage/recent",
-            timeout=5
-        )
+        response = session.get(f"{BACKEND_URL}/api/mileage/recent", timeout=3)
         recent_mileage = response.json()
     except Exception:
         recent_mileage = []
 
-    return render_template(
-        "home.html",
-        recent_mileage=recent_mileage
-    )
+    return render_template("home.html", recent_mileage=recent_mileage)
 
 
 @app.route("/vehicles")
 def vehicles():
-    return render_template("vehicles.html")
+    try:
+        response = session.get(f"{BACKEND_URL}/api/vehicles", timeout=3)
+        initial_vehicles = response.json()
+    except Exception:
+        initial_vehicles = []
+
+    return render_template("vehicles.html", initial_vehicles=initial_vehicles)
 
 
 @app.route("/mileage")
 def mileage():
-    return render_template("mileage.html")
+    try:
+        v_resp = session.get(f"{BACKEND_URL}/api/vehicles", timeout=3)
+        initial_vehicles = v_resp.json()
+    except Exception:
+        initial_vehicles = []
+
+    try:
+        m_resp = session.get(f"{BACKEND_URL}/api/mileage", timeout=3)
+        initial_mileage = m_resp.json()
+    except Exception:
+        initial_mileage = []
+
+    return render_template(
+        "mileage.html",
+        initial_vehicles=initial_vehicles,
+        initial_mileage=initial_mileage
+    )
 
 
 @app.route("/maintenance")
 def maintenance():
-    return render_template("maintenance.html")
+    try:
+        v_resp = session.get(f"{BACKEND_URL}/api/vehicles", timeout=3)
+        initial_vehicles = v_resp.json()
+    except Exception:
+        initial_vehicles = []
+
+    try:
+        t_resp = session.get(f"{BACKEND_URL}/api/maintenance/types", timeout=3)
+        initial_types = t_resp.json()
+    except Exception:
+        initial_types = []
+
+    try:
+        m_resp = session.get(f"{BACKEND_URL}/api/maintenance", timeout=3)
+        initial_maintenance = m_resp.json()
+    except Exception:
+        initial_maintenance = []
+
+    return render_template(
+        "maintenance.html",
+        initial_vehicles=initial_vehicles,
+        initial_types=initial_types,
+        initial_maintenance=initial_maintenance
+    )
 
 
 @app.route("/api/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
 def proxy(path):
-    """Reverse-proxy API calls to the backend container."""
+    """Reverse-proxy API calls to the backend container using persistent session pool."""
     url = f"{BACKEND_URL}/api/{path}"
     params = request.args.to_dict()
     data = request.get_data() if request.method in ("POST", "PUT", "DELETE") else None
@@ -52,13 +94,13 @@ def proxy(path):
         headers["Content-Type"] = request.content_type
 
     try:
-        resp = requests.request(
+        resp = session.request(
             request.method,
             url,
             params=params,
             data=data,
             headers=headers,
-            timeout=30
+            timeout=10
         )
         excluded_headers = [
             "content-encoding",

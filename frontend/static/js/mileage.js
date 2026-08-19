@@ -32,6 +32,10 @@ function clearMileageForm() {
 
 async function loadMileage() {
     try {
+        const tbody = document.querySelector("#mileageTable tbody");
+        if (tbody && allMileageRecords.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; opacity:0.6;">Loading mileage...</td></tr>';
+        }
         const res = await apiRequest("/api/mileage");
         allMileageRecords = await res.json();
         applyMileageFilter();
@@ -43,60 +47,92 @@ async function loadMileage() {
 function applyMileageFilter() {
     const filterSelect = document.getElementById("filterVehicle");
     const vehicleId = filterSelect ? filterSelect.value : "";
-
-    const records = vehicleId
-        ? allMileageRecords.filter(r => String(r.vehicle_id) === String(vehicleId))
-        : allMileageRecords;
-
-    renderMileageRows(records);
-}
-
-function renderMileageRows(records) {
     const tbody = document.querySelector("#mileageTable tbody");
     if (!tbody) return;
+
     tbody.innerHTML = "";
 
-    records.forEach(r => {
+    const filtered = vehicleId
+        ? allMileageRecords.filter(m => String(m.vehicle_id) === String(vehicleId))
+        : allMileageRecords;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; opacity:0.6;">No mileage records found.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(m => {
         const row = document.createElement("tr");
+        const vehicleLabel = `${m.year || ''} ${m.make} ${m.model}`.trim();
         row.innerHTML = `
-            <td>${r.make} ${r.model}</td>
-            <td>${Number(r.mileage).toLocaleString()} miles</td>
-            <td>${r.date}</td>
+            <td>${m.id}</td>
+            <td>${vehicleLabel}</td>
+            <td>${Number(m.mileage).toLocaleString()} mi</td>
+            <td>${m.date}</td>
             <td>
-                <button class="edit" onclick="editMileage(${r.id}, ${r.mileage}, '${r.date}')">Edit</button>
-                <button class="delete" onclick="deleteMileage(${r.id})">Delete</button>
+                <button class="edit" onclick="editMileage(${m.id}, ${m.vehicle_id}, ${m.mileage}, '${m.date}')">Edit</button>
+                <button class="delete" onclick="deleteMileage(${m.id})">Delete</button>
             </td>
         `;
         tbody.appendChild(row);
     });
 }
 
-function editMileage(id, mileage, date) {
-    currentEditType = 'mileage';
-    currentEditId = id;
-
-    showEditModal("Edit Mileage", [
-        { id: "mileage", label: "Mileage", type: "number", value: mileage },
-        { id: "date", label: "Date", type: "date", value: date }
-    ], async (data) => {
-        try {
-            await apiRequest(`/api/mileage/${currentEditId}`, "PUT", {
-                mileage: parseInt(data.mileage),
-                date: data.date
-            });
-            loadMileage();
-        } catch (e) {
-            alert("Failed to update mileage.");
+function applyVehicleFilterFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const vehicleId = params.get("vehicle");
+    if (vehicleId) {
+        const filterSelect = document.getElementById("filterVehicle");
+        if (filterSelect) {
+            filterSelect.value = vehicleId;
+            applyMileageFilter();
         }
+    }
+}
+
+function editMileage(id, currentVehicleId, currentMileage, currentDate) {
+    getVehiclesList().then(vehicles => {
+        const vehicleOptions = vehicles.map(v =>
+            `<option value="${v.id}" ${v.id === currentVehicleId ? "selected" : ""}>${v.year || ''} ${v.make} ${v.model}</option>`
+        ).join("");
+
+        showEditModal(
+            "Edit Mileage",
+            [
+                { label: "Vehicle", id: "edit_vehicle", type: "select", optionsHtml: vehicleOptions },
+                { label: "Mileage", id: "edit_mileage", type: "number", value: currentMileage, required: true },
+                { label: "Date", id: "edit_date", type: "date", value: currentDate, required: true }
+            ],
+            async () => {
+                const vehicle_id = parseInt(document.getElementById("edit_vehicle").value);
+                const mileage = parseInt(document.getElementById("edit_mileage").value);
+                const date = document.getElementById("edit_date").value;
+
+                if (!vehicle_id || !mileage || !date) {
+                    alert("All fields are required.");
+                    return false;
+                }
+
+                try {
+                    await apiRequest(`/api/mileage/${id}`, "PUT", { vehicle_id, mileage, date });
+                    loadMileage();
+                    return true;
+                } catch (e) {
+                    alert("Failed to update mileage.");
+                    return false;
+                }
+            }
+        );
     });
 }
 
 async function deleteMileage(id) {
-    if (!confirm("Delete this mileage record?")) return;
+    if (!confirm("Are you sure you want to delete this mileage record?")) return;
+
     try {
         await apiRequest(`/api/mileage/${id}`, "DELETE");
         loadMileage();
     } catch (e) {
-        alert("Failed to delete record.");
+        alert("Failed to delete mileage.");
     }
 }
