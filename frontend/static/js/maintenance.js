@@ -61,10 +61,6 @@ function clearMaintenanceForm() {
 
 async function loadMaintenance() {
     try {
-        const tbody = document.querySelector("#maintenanceTable tbody");
-        if (tbody && allMaintenanceRecords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; opacity:0.6;">Loading maintenance records...</td></tr>';
-        }
         const res = await apiRequest("/api/maintenance");
         allMaintenanceRecords = await res.json();
         applyMaintenanceFilter();
@@ -116,13 +112,11 @@ function applyMaintenanceFilter() {
 function applyVehicleFilterFromURL() {
     const params = new URLSearchParams(window.location.search);
     const vehicleId = params.get("vehicle");
-    if (vehicleId) {
-        const filterSelect = document.getElementById("filterVehicle");
-        if (filterSelect) {
-            filterSelect.value = vehicleId;
-            applyMaintenanceFilter();
-        }
+    const filterSelect = document.getElementById("filterVehicle");
+    if (filterSelect && vehicleId) {
+        filterSelect.value = vehicleId;
     }
+    applyMaintenanceFilter();
 }
 
 function editMaintenance(id, currentVehicleId, currentType, currentDesc, currentCost, currentDate, currentMileage) {

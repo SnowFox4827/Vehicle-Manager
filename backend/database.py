@@ -15,7 +15,7 @@ def get_db():
 
 
 def init_db():
-    """Initialize database tables."""
+    """Initialize database tables and run lightweight migrations."""
     conn = get_db()
     try:
         conn.execute("PRAGMA foreign_keys = ON;")
@@ -48,10 +48,17 @@ def init_db():
                 category TEXT,
                 service_type TEXT,
                 description TEXT,
+                cost REAL,
                 mileage INTEGER,
-                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id)
+                FOREIGN KEY(vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
             )
         """)
+
+        # Migration helper: ensure `cost` column exists if database was created by an older schema
+        cols = [c["name"] for c in conn.execute("PRAGMA table_info(maintenance)").fetchall()]
+        if "cost" not in cols:
+            conn.execute("ALTER TABLE maintenance ADD COLUMN cost REAL")
+
         conn.commit()
     finally:
         conn.close()

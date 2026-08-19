@@ -1,2 +1,1 @@
-flask
-flask-cors
+Flask>=3.0.0

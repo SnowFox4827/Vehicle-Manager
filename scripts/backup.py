@@ -1,146 +1,118 @@
 #!/usr/bin/env python3
-"""
-Vehicle Manager - Dual Format Automated Backup Runner
-Creates:
-  1. SQLite binary snapshot (safe online backup)
-  2. Structured JSON dump (vehicles, mileage, maintenance)
-  3. SHA-256 integrity checksums
-  4. latest.json pointer
-Prunes snapshots exceeding retention threshold.
-"""
+import datetime
+import hashlib
+import json
 import os
+import shutil
+import sqlite3
 import sys
 import time
-import json
-import sqlite3
-import hashlib
-import shutil
-from datetime import datetime
 
-DB_PATH = os.environ.get('DB_PATH', '/app/data/vehicles.db')
-BACKUP_DIR = os.environ.get('BACKUP_DIR', '/backups')
-RETENTION_DAYS = int(os.environ.get('RETENTION_DAYS', 30))
+DB_PATH = os.environ.get("DB_PATH", "/app/data/vehicles.db")
+BACKUP_DIR = os.environ.get("BACKUP_DIR", "/backups")
+RETENTION_DAYS = int(os.environ.get("RETENTION_DAYS", 30))
+INTERVAL_HOURS = int(os.environ.get("BACKUP_INTERVAL_HOURS", 24))
 
 
-def run_backup():
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting Vehicle Manager backup process...")
+def sha256_file(filepath):
+    """Compute SHA-256 hash of a file."""
+    h = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
 
+
+def run_backup_job():
+    """Execute a complete, atomic backup cycle."""
     if not os.path.exists(DB_PATH):
-        print(f"Warning: Database file not found at {DB_PATH}. Skipping.")
-        return False
+        print(f"[{datetime.datetime.now()}] Database file not found at {DB_PATH}. Skipping.")
+        return None
 
     os.makedirs(BACKUP_DIR, exist_ok=True)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%SZ")
     snapshot_dir = os.path.join(BACKUP_DIR, f"snapshot_{timestamp}")
     os.makedirs(snapshot_dir, exist_ok=True)
 
-    # 1. Safe SQLite Online Backup
-    db_backup_file = os.path.join(snapshot_dir, "vehicles.db")
-    try:
-        src = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-        dst = sqlite3.connect(db_backup_file)
-        with dst:
-            src.backup(dst)
-        dst.close()
-        src.close()
-        print(f"  ✓ SQLite binary snapshot created: {db_backup_file}")
-    except Exception as e:
-        print(f"  ✗ SQLite backup error: {e}")
-        return False
+    target_db = os.path.join(snapshot_dir, "vehicles.db")
+    src = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    dst = sqlite3.connect(target_db)
+    with dst:
+        src.backup(dst, pages=100)
+    dst.close()
+    src.close()
 
-    # 2. Extract JSON export
-    try:
-        conn = sqlite3.connect(db_backup_file)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+    db_hash = sha256_file(target_db)
 
-        vehicles = [dict(r) for r in cursor.execute('SELECT * FROM vehicles ORDER BY id ASC').fetchall()]
-        mileage = [dict(r) for r in cursor.execute('SELECT * FROM mileage ORDER BY date DESC, id DESC').fetchall()]
-        maintenance = [dict(r) for r in cursor.execute('SELECT * FROM maintenance ORDER BY service_date DESC, id DESC').fetchall()]
-        conn.close()
+    conn = sqlite3.connect(target_db)
+    conn.row_factory = sqlite3.Row
+    vehicles = [dict(r) for r in conn.execute("SELECT * FROM vehicles").fetchall()]
+    mileage = [dict(r) for r in conn.execute("SELECT * FROM mileage").fetchall()]
+    maintenance = [dict(r) for r in conn.execute("SELECT * FROM maintenance").fetchall()]
+    conn.close()
 
-        json_data = {
-            "metadata": {
-                "version": "1.0",
-                "exported_at": datetime.now().isoformat(),
-                "generator": "Vehicle Manager Automated Sidecar",
-                "total_vehicles": len(vehicles),
-                "total_mileage_entries": len(mileage),
-                "total_maintenance_records": len(maintenance)
-            },
+    json_export = {
+        "version": 1,
+        "exported_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "tables": {
             "vehicles": vehicles,
             "mileage": mileage,
-            "maintenance": maintenance
-        }
+            "maintenance": maintenance,
+        },
+    }
 
-        json_backup_file = os.path.join(snapshot_dir, "data_export.json")
-        with open(json_backup_file, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, indent=2)
-        print(f"  ✓ JSON data export created: {json_backup_file}")
+    target_json = os.path.join(snapshot_dir, "data_export.json")
+    with open(target_json, "w", encoding="utf-8") as f:
+        json.dump(json_export, f, indent=2)
 
-        # Update latest.json
-        latest_file = os.path.join(BACKUP_DIR, "latest.json")
-        with open(latest_file, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, indent=2)
-    except Exception as e:
-        print(f"  ✗ JSON export error: {e}")
+    json_hash = sha256_file(target_json)
 
-    # 3. Compute Checksums
-    try:
-        checksum_file = os.path.join(snapshot_dir, "checksum.sha256")
-        with open(checksum_file, 'w', encoding='utf-8') as cf:
-            for fname in ["vehicles.db", "data_export.json"]:
-                fpath = os.path.join(snapshot_dir, fname)
-                if os.path.exists(fpath):
-                    hasher = hashlib.sha256()
-                    with open(fpath, 'rb') as f:
-                        while chunk := f.read(8192):
-                            hasher.update(chunk)
-                    cf.write(f"{hasher.hexdigest()}  {fname}\n")
-        print(f"  ✓ SHA-256 checksums recorded.")
-    except Exception as e:
-        print(f"  ✗ Checksum calculation error: {e}")
+    manifest = {
+        "snapshot_timestamp": timestamp,
+        "database_sha256": db_hash,
+        "export_json_sha256": json_hash,
+        "record_counts": {
+            "vehicles": len(vehicles),
+            "mileage": len(mileage),
+            "maintenance": len(maintenance),
+        },
+    }
 
-    # 4. Retention Pruning
-    now = datetime.now()
-    pruned = 0
-    try:
-        for entry in os.scandir(BACKUP_DIR):
-            if entry.is_dir() and entry.name.startswith("snapshot_"):
-                mtime = datetime.fromtimestamp(entry.stat().st_mtime)
-                if (now - mtime).days > RETENTION_DAYS:
-                    shutil.rmtree(entry.path, ignore_errors=True)
-                    pruned += 1
-        if pruned > 0:
-            print(f"  ✓ Pruned {pruned} old snapshot(s) (> {RETENTION_DAYS} days).")
-    except Exception as e:
-        print(f"  ✗ Pruning error: {e}")
+    manifest_file = os.path.join(snapshot_dir, "manifest.json")
+    with open(manifest_file, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
 
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Backup finished successfully.")
-    return True
+    latest_file = os.path.join(BACKUP_DIR, "latest.json")
+    with open(latest_file, "w", encoding="utf-8") as f:
+        json.dump({"latest_snapshot": os.path.basename(snapshot_dir), "manifest": manifest}, f, indent=2)
+
+    # Retention Prune
+    cutoff = datetime.datetime.now() - datetime.timedelta(days=RETENTION_DAYS)
+    for entry in os.listdir(BACKUP_DIR):
+        entry_path = os.path.join(BACKUP_DIR, entry)
+        if os.path.isdir(entry_path) and entry.startswith("snapshot_"):
+            try:
+                date_str = entry.replace("snapshot_", "").split("_")[0]
+                entry_date = datetime.datetime.strptime(date_str, "%Y%m%d")
+                if entry_date < cutoff:
+                    shutil.rmtree(entry_path)
+                    print(f"Pruned old snapshot: {entry}")
+            except Exception:
+                pass
+
+    print(f"[{datetime.datetime.now()}] Backup finished successfully: {snapshot_dir}")
+    return {"snapshot_dir": os.path.basename(snapshot_dir), "manifest": manifest}
 
 
-def daemon_loop():
-    """Run backup periodically according to interval (default: every 24 hours / 86400s)."""
-    interval_hours = float(os.environ.get('BACKUP_INTERVAL_HOURS', '24'))
-    interval_sec = interval_hours * 3600
-    print(f"Starting Vehicle Manager Backup Sidecar Daemon (interval: every {interval_hours} hours, retention: {RETENTION_DAYS} days)...")
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--once":
+        run_backup_job()
+        sys.exit(0)
 
-    # Run once at startup
-    run_backup()
-
+    print(f"Starting automated backup daemon. Interval: {INTERVAL_HOURS}h, Retention: {RETENTION_DAYS}d")
     while True:
         try:
-            time.sleep(interval_sec)
-            run_backup()
-        except (KeyboardInterrupt, SystemExit):
-            print("Backup daemon stopped.")
-            break
-
-
-if __name__ == '__main__':
-    if '--once' in sys.argv or os.environ.get('RUN_ONCE') == '1':
-        success = run_backup()
-        sys.exit(0 if success else 1)
-    else:
-        daemon_loop()
+            run_backup_job()
+        except Exception as e:
+            print(f"Error during scheduled backup: {e}")
+        time.sleep(INTERVAL_HOURS * 3600)

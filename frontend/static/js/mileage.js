@@ -32,10 +32,6 @@ function clearMileageForm() {
 
 async function loadMileage() {
     try {
-        const tbody = document.querySelector("#mileageTable tbody");
-        if (tbody && allMileageRecords.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; opacity:0.6;">Loading mileage...</td></tr>';
-        }
         const res = await apiRequest("/api/mileage");
         allMileageRecords = await res.json();
         applyMileageFilter();
@@ -81,13 +77,11 @@ function applyMileageFilter() {
 function applyVehicleFilterFromURL() {
     const params = new URLSearchParams(window.location.search);
     const vehicleId = params.get("vehicle");
-    if (vehicleId) {
-        const filterSelect = document.getElementById("filterVehicle");
-        if (filterSelect) {
-            filterSelect.value = vehicleId;
-            applyMileageFilter();
-        }
+    const filterSelect = document.getElementById("filterVehicle");
+    if (filterSelect && vehicleId) {
+        filterSelect.value = vehicleId;
     }
+    applyMileageFilter();
 }
 
 function editMileage(id, currentVehicleId, currentMileage, currentDate) {

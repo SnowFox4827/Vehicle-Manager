@@ -9,7 +9,7 @@ COPY scripts/backup.py /app/backup.py
 RUN chmod +x /app/backup.py
 
 # Default environment
-ENV DB_PATH=/app/data/vehicles.db
+ENV DB_PATH=/app/data/budget.db
 ENV BACKUP_DIR=/backups
 ENV RETENTION_DAYS=30
 ENV BACKUP_INTERVAL_HOURS=24

@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (window.INITIAL_MILEAGE) {
             allMileageRecords = window.INITIAL_MILEAGE;
+            // Always sync dropdown selection with URL and filter table on load
             applyVehicleFilterFromURL();
         } else {
             initMileagePage();
@@ -32,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (window.INITIAL_MAINTENANCE) {
             allMaintenanceRecords = window.INITIAL_MAINTENANCE;
+            // Always sync dropdown selection with URL and filter table on load
             applyVehicleFilterFromURL();
         } else {
             initMaintenancePage();
