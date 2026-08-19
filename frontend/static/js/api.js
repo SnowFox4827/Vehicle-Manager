@@ -1,38 +1,23 @@
-// ==================== Backend API Base ====================
-// The backend runs as a separate container on its own host port (see
-// docker-compose.yml: backend is published on 5003, frontend on 5002).
-// A plain relative fetch("/api/...") from the browser resolves against
-// the frontend's own origin, which has no /api routes and 404s. Route
-// /api requests to the backend's origin instead; leave everything else
-// (e.g. /static/...) untouched so it's still served by the frontend.
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:5003`;
+// ==================== Backend API Helper ====================
+// Uses same-origin relative URLs (/api/...) proxied through the frontend server,
+// eliminating CORS and direct backend port access issues in the browser.
 
-// ==================== Attribute Escaping Helper ====================
-// Escapes a value so it can be safely embedded inside an onclick="fn('...')"
-// attribute: backslashes and single quotes (which delimit the JS string
-// literal) and double quotes (which delimit the HTML attribute itself).
-function escAttr(value) {
-    if (value === null || value === undefined) return '';
-    return String(value)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;');
-}
-
-// ==================== API Helper ====================
-async function apiRequest(url, method = "GET", data = null) {
-    const targetUrl = url.startsWith("/api") ? `${API_BASE}${url}` : url;
-
+async function apiRequest(path, method = "GET", body = null) {
     const options = {
-        method: method,
+        method,
         headers: { "Content-Type": "application/json" }
     };
-    if (data) options.body = JSON.stringify(data);
-
-    const response = await fetch(targetUrl, options);
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Request failed: ${response.status}`);
+    if (body !== null && method !== "GET") {
+        options.body = JSON.stringify(body);
     }
-    return response;
+    const res = await fetch(path, options);
+    if (!res.ok) {
+        let msg = `${method} ${path} failed (${res.status})`;
+        try {
+            const err = await res.json();
+            if (err.error) msg = err.error;
+        } catch (_) {}
+        throw new Error(msg);
+    }
+    return res;
 }

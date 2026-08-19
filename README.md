@@ -1,236 +1,134 @@
-# Vehicle Management Application
+# Vehicle Manager
 
-## Overview
+A lightweight, self-hosted web application for managing fleet vehicles, tracking mileage, and logging maintenance history.
 
-A Flask and SQLite application for managing a fleet of vehicles,
-tracking mileage, and recording maintenance history.
-
-The application is separated into two Docker containers:
-
--   Frontend: Web interface containing HTML templates, CSS, JavaScript, and frontend data files
--   Backend: Flask REST API with SQLite database
-
-## Features
-
--   Vehicle management (add, view, update, delete)
--   Mileage tracking
--   Maintenance tracking
--   Fleet dashboard showing each vehicle's most recent mileage
--   SQLite database
--   REST API backend
--   Separate frontend and backend containers
--   Docker and Docker Compose support
+---
 
 ## Project Structure
 
-``` text
-.
-├── docker-compose.yml
-│
-├── backend/
-│   ├── app.py
-│   ├── database.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   ├── vehicles.db
-│   └── routes/
-│       ├── home.py
-│       ├── vehicles.py
-│       ├── mileage.py
-│       └── maintenance.py
-│
-└── frontend/
-    ├── Dockerfile
-    │── app.py
-    ├── templates/
-    │   ├── home.html
-    │   ├── vehicles.html
-    │   ├── mileage.html
-    │   └── maintenance.html
-    │
-    └── static/
-        |── maintenance_types.json
-        ├── css/
-        │   └── style.css
-        |
-        └── js/
-            ├── api.js
-            ├── home.js
-            ├── maintenance.js
-            ├── mileage.js
-            ├── modal.js
-            ├── state.js
-            └── vehicles.js
+```text
+Vehicle-Manager/
+├── .env.example              # Sample environment configuration
+├── docker-compose.yml        # Multi-container orchestration (backend, frontend, backup)
+├── Dockerfile.backup         # Standalone backup daemon container definition
+├── README.md                 # Documentation & setup guide
+├── backend/                  # Backend REST API service
+│   ├── Dockerfile            # Python 3.12 Flask API container
+│   ├── app.py                # Flask app entrypoint & blueprint registrations
+│   ├── database.py           # SQLite schema init & connection helpers
+│   ├── requirements.txt      # Python dependencies (Flask, Flask-CORS, requests)
+│   └── routes/               # Modular API endpoint blueprints
+│       ├── __init__.py
+│       ├── backup.py         # Export & manual snapshot endpoints
+│       ├── health.py         # Container healthcheck endpoint (/api/health)
+│       ├── home.py           # Summary dashboard endpoints
+│       ├── maintenance.py    # Maintenance log CRUD endpoints
+│       ├── mileage.py        # Mileage log CRUD endpoints
+│       └── vehicles.py       # Vehicle management CRUD endpoints
+├── frontend/                 # Frontend Web Server & Proxy
+│   ├── Dockerfile            # Python 3.12 UI container
+│   ├── app.py                # Template server & /api/* reverse proxy
+│   ├── requirements.txt      # Python dependencies (Flask, requests)
+│   ├── static/               # Client-side static assets
+│   │   ├── css/
+│   │   │   └── style.css     # Global responsive styling
+│   │   ├── js/
+│   │   │   ├── api.js        # Relative fetch helper (/api/...)
+│   │   │   ├── home.js       # Dashboard view logic
+│   │   │   ├── maintenance.js# Maintenance management logic
+│   │   │   ├── mileage.js    # Mileage tracking logic
+│   │   │   ├── modal.js      # Modal & dialog helpers
+│   │   │   ├── state.js      # Client state storage
+│   │   │   └── vehicles.js   # Vehicle CRUD UI logic
+│   │   └── maintenance_types.json # Service categories & tasks
+│   └── templates/            # Jinja2 HTML templates
+│       ├── home.html         # Fleet dashboard overview
+│       ├── maintenance.html  # Maintenance tracking page
+│       ├── mileage.html      # Mileage tracking page
+│       └── vehicles.html     # Vehicle management page
+└── scripts/                  # Automation & maintenance utilities
+    └── backup.py             # Dual-format backup daemon & retention pruner
 ```
 
-## Requirements
+---
 
--   Docker and Docker Compose (recommended)
+## Architecture
 
-Or:
+- **Backend**: Python / Flask REST API with SQLite database & backup management endpoints.
+- **Frontend**: Python / Flask server serving Jinja2 templates and providing a transparent `/api/*` reverse-proxy to the backend.
+- **Backup Sidecar**: Automated daemon performing periodic dual-format SQLite + JSON backups with SHA-256 integrity checksums and configurable retention pruning.
+- **Containerization**: Multi-container Docker setup orchestrated via `docker-compose` with health check dependencies.
 
--   Python 3.11+
--   pip
+---
 
-## Run with Docker Compose
+## Quick Start
 
-Build and start containers:
+### Option A: Docker Compose (Recommended)
 
-``` bash
-docker compose up -d --build
-```
+1. Create your environment configuration:
+   ```bash
+   cp .env.example .env
+   ```
 
-Frontend:
+2. Start the services:
+   ```bash
+   docker compose up --build -d
+   ```
 
-```
-http://localhost:5002
-```
+3. Open your browser:
+   - **Web UI**: `http://localhost:5002` (or your configured `HOST_PORT`)
+   - **Backend API**: `http://localhost:5003` (or your configured `BACKEND_PORT`)
 
-Backend API:
+---
 
-```
-http://localhost:5003
-```
+### Option B: Local Python Development
 
-Stop:
+1. **Start Backend**:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python app.py
+   ```
+   *(Runs on `http://127.0.0.1:5002`)*
 
-``` bash
-docker compose down
-```
+2. **Start Frontend** (in a new terminal):
+   ```bash
+   cd frontend
+   pip install -r requirements.txt
+   python app.py
+   ```
+   *(Runs on `http://127.0.0.1:5000`)*
 
-## Docker Port Mapping
+3. Open `http://127.0.0.1:5000` in your browser.
 
-Frontend:
+---
 
-``` yaml
-5002:5000
-```
+## Environment Variables (`.env`)
 
--   Port `5002` = host computer port
--   Port `5000` = Flask port inside frontend container
+| Variable | Default | Description |
+|---|---|---|
+| `HOST_PORT` | `5002` | Port exposed on host for the web UI |
+| `BACKEND_PORT` | `5003` | Port exposed on host for direct REST API access |
+| `DATA_DIR` | `./backend/data` | Host folder for persistent SQLite database |
+| `BACKUP_HOST_DIR` | `./backups` | Host folder / NAS path for backup snapshots |
+| `BACKUP_INTERVAL_HOURS` | `24` | Automated backup sidecar interval in hours |
+| `RETENTION_DAYS` | `30` | Number of days to retain snapshot backups before auto-pruning |
 
-Backend:
+---
 
-``` yaml
-5003:5002
-```
+## Backup Strategy
 
--   Port `5003` = host computer port
--   Port `5002` = Flask port inside backend container
+1. **Automated Sidecar Daemon**:
+   - Runs continuously on a scheduled cadence (default: every 24 hours).
+   - Generates a timestamped snapshot folder under `BACKUP_HOST_DIR` (e.g. `snapshot_20260819_120000/`).
+   - Produces a consistent online SQLite binary snapshot (`vehicles.db`) without locking active reads/writes.
+   - Generates a structured JSON dump (`data_export.json`) containing all vehicles, mileage records, and maintenance logs.
+   - Calculates SHA-256 checksums (`checksum.sha256`) for file validation.
+   - Updates `latest.json` pointer for easy external monitoring.
+   - Prunes snapshots older than `RETENTION_DAYS`.
 
-## Run Backend Without Docker
-
-Install dependencies:
-
-``` bash
-pip install -r requirements.txt
-```
-
-Start:
-
-``` bash
-python app.py
-```
-
-Backend runs on:
-
-```
-http://localhost:5002
-```
-
-## Database
-
-The application uses:
-
-```
-vehicles.db
-```
-
-(SQLite database stored in the backend container.)
-
-Tables include:
-
--   vehicles
--   mileage
--   maintenance
-
-## Frontend Files
-
-The frontend contains:
-
-### Templates
-
-HTML pages:
-
--   home.html
--   vehicles.html
--   mileage.html
--   maintenance.html
-
-### Static Files
-
-JavaScript:
-
-```
-static/js/
-```
-
-CSS:
-
-```
-static/css/
-```
-
-Maintenance service definitions:
-
-```
-maintenance_types.json
-```
-
-## API
-
-Backend API endpoints:
-
--   GET /api/vehicles
--   POST /api/vehicles
--   PUT /api/vehicles/<id>
--   DELETE /api/vehicles/<id>
-
--   GET /api/mileage
--   GET /api/mileage/recent
--   POST /api/mileage
--   PUT /api/mileage/<id>
--   DELETE /api/mileage/<id>
-
--   GET /api/maintenance
--   POST /api/maintenance
--   PUT /api/maintenance/<id>
--   DELETE /api/maintenance/<id>
-
-Example:
-
-```
-http://localhost:5003/api/vehicles
-```
-
-## Development
-
-Source code is mounted into the containers:
-
-Backend:
-
-```
-./backend:/app
-```
-
-Frontend:
-
-```
-./frontend:/app
-```
-
-Changes to source files are available without rebuilding the images.
-
-## License
-
-For educational and personal use.
+2. **On-Demand API Endpoints**:
+   - `POST /api/backup/snapshot` — Triggers an immediate dual-format snapshot.
+   - `GET /api/backup/export?format=json` — Directly downloads full dataset as JSON.
+   - `GET /api/backup/export?format=db` — Directly downloads a live SQLite binary copy.
+   - `GET /api/backup/status` — Returns metadata and list of available backup snapshots.

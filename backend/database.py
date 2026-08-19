@@ -1,10 +1,14 @@
+import os
 import sqlite3
 
-DATABASE = "vehicles.db"
+DATA_DIR = os.environ.get("DATA_DIR", ".")
+DATABASE = os.path.join(DATA_DIR, "vehicles.db")
 
 
 def get_db():
     """Get database connection with row factory enabled."""
+    if DATA_DIR and DATA_DIR != ".":
+        os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
