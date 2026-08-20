@@ -1,8 +1,8 @@
 import sqlite3
 import os
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
-DB_PATH = os.path.join(DATA_DIR, 'vehicles.db')
+DATA_DIR = os.environ.get('DATA_DIR', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data'))
+DB_PATH = os.environ.get('DB_PATH', os.path.join(DATA_DIR, 'vehicles.db'))
 
 
 def get_db():

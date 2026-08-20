@@ -5,6 +5,9 @@ services:
     build:
       context: ./backend
     container_name: vehicle-backend
+    environment:
+      - DB_PATH=/app/data/vehicles.db
+      - BACKUP_DIR=/backups
     volumes:
       - ${DATA_DIR:-./backend/data}:/app/data
       - ${BACKUP_HOST_DIR:-./backups}:/backups
@@ -36,7 +39,7 @@ services:
       dockerfile: Dockerfile.backup
     container_name: vehicle-backup
     environment:
-      - DB_PATH=/app/data/vehicle.db
+      - DB_PATH=/app/data/vehicles.db
       - BACKUP_DIR=/backups
       - RETENTION_DAYS=${RETENTION_DAYS:-30}
       - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}

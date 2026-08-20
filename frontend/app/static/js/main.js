@@ -3,6 +3,11 @@
  * Clean light/dark architecture matching Budget App
  */
 
+const ICONS = {
+    edit: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207z"/></svg>',
+    trash: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>'
+};
+
 let state = {
     vehicles: [],
     mileage: [],
@@ -115,71 +120,45 @@ function renderVehicles() {
     if (!container || !tbody) return;
 
     if (state.vehicles.length === 0) {
-        container.innerHTML = '<div class="empty-state text-muted">No vehicles added yet. Click "+ Add Vehicle" to get started.</div>';
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No vehicles found.</td></tr>';
+        container.innerHTML = '<p class="text-muted">No vehicles added yet. Click "+ Add Vehicle" to get started.</p>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">No vehicles found.</td></tr>';
         return;
     }
 
-    // Modern styled Vehicle Grid Cards with generous breathing room
     container.innerHTML = state.vehicles.map(v => {
-        const latestMiles = v.current_mileage ? `${Number(v.current_mileage).toLocaleString()} mi` : 'No logs';
+        const latestMiles = v.current_mileage ? `${Number(v.current_mileage).toLocaleString()} mi` : '0 mi';
         return `
-            <div class="card vehicle-card">
-                <div class="card-header flex between align-start">
-                    <div class="vehicle-title-wrap">
-                        <span class="vehicle-year">${v.year || 'Fleet'}</span>
-                        <h4 class="card-title">${v.make} ${v.model}</h4>
-                    </div>
-                    <span class="badge ${v.current_mileage ? 'badge-blue' : 'badge-gray'}">${latestMiles}</span>
-                </div>
-                <div class="card-body flex col gap-3">
-                    <div class="vehicle-specs-grid">
-                        <div class="spec-box">
-                            <span class="spec-label">Current Odometer</span>
-                            <span class="spec-value font-mono">${latestMiles}</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">Service History</span>
-                            <span class="spec-value">${v.maintenance_count || 0} events</span>
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="flex space-between align-center mb-2">
+                        <h5 class="fw-bold m-0">${v.year ? v.year + ' ' : ''}${v.make} ${v.model}</h5>
+                        <div class="flex gap-2">
+                            <button class="btn-link text-primary" onclick="editVehicle(${v.id})" title="Edit Vehicle">${ICONS.edit}</button>
+                            <button class="btn-link text-danger" onclick="deleteVehicle(${v.id})" title="Delete Vehicle">${ICONS.trash}</button>
                         </div>
                     </div>
-                    <div class="vin-pill-wrap">
-                        <span class="vin-label">VIN:</span>
-                        <code class="vin-code">${v.vin || 'Not specified'}</code>
-                    </div>
-                </div>
-                <div class="card-footer flex between wrap align-center gap-2">
-                    <div class="flex gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="filterToVehicle(${v.id}, 'mileage-sec')" title="View Mileage History">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
-                            Mileage
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="filterToVehicle(${v.id}, 'maintenance-sec')" title="View Service History">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3c0-.269-.035-.53-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.103a3 3 0 0 0-3.675 3.68L7.462 6.46 4.79 3.79a1 1 0 0 1-.293-.707v-.07a1 1 0 0 0-.419-.814L1 0z"/></svg>
-                            Services
-                        </button>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="editVehicle(${v.id})">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteVehicle(${v.id})">Delete</button>
+                    <div class="acc-balance">${latestMiles}</div>
+                    <div class="acc-row"><span>VIN:</span><span class="value">${v.vin || 'None'}</span></div>
+                    <div class="acc-row"><span>Services:</span><span class="value">${v.maintenance_count || 0}</span></div>
+                    <div class="flex gap-2 mt-3">
+                        <button class="btn btn-sm btn-outline-secondary grow" onclick="filterToVehicle(${v.id}, 'mileage-sec')">Mileage</button>
+                        <button class="btn btn-sm btn-outline-secondary grow" onclick="filterToVehicle(${v.id}, 'maintenance-sec')">Services</button>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
 
-    // List View Rows
     tbody.innerHTML = state.vehicles.map(v => `
         <tr>
-            <td class="fw-semibold">${v.make} ${v.model}</td>
-            <td>${v.year || '-'}</td>
+            <td class="fw-semibold">${v.year ? v.year + ' ' : ''}${v.make} ${v.model}</td>
             <td><code>${v.vin || '-'}</code></td>
-            <td class="text-end font-mono">${v.current_mileage ? Number(v.current_mileage).toLocaleString() + ' mi' : '-'}</td>
-            <td class="text-end">${v.maintenance_count || 0}</td>
+            <td class="text-end font-mono text-primary fw-bold">${v.current_mileage ? Number(v.current_mileage).toLocaleString() + ' mi' : '-'}</td>
+            <td class="text-end text-dark">${v.maintenance_count || 0}</td>
             <td class="text-center">
-                <div class="flex center gap-1">
-                    <button class="btn btn-xs btn-outline-secondary" onclick="editVehicle(${v.id})">Edit</button>
-                    <button class="btn btn-xs btn-outline-danger" onclick="deleteVehicle(${v.id})">Delete</button>
+                <div class="flex center gap-2">
+                    <button class="btn-link text-primary" onclick="editVehicle(${v.id})" title="Edit">${ICONS.edit}</button>
+                    <button class="btn-link text-danger" onclick="deleteVehicle(${v.id})" title="Delete">${ICONS.trash}</button>
                 </div>
             </td>
         </tr>

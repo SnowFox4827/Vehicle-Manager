@@ -306,11 +306,14 @@ def export_backup():
             'maintenance': maintenance
         }
     }
-    return jsonify(export_payload)
+    response = jsonify(export_payload)
+    response.headers['Content-Disposition'] = 'attachment; filename=vehicles_backup.json'
+    return response
 
 @backup_bp.route('/api/backup/status', methods=['GET'])
 def backup_status():
-    backup_dir = os.environ.get('BACKUP_DIR', '/backups')
+    from app.backup import get_backup_dir
+    backup_dir = get_backup_dir()
     retention_days = int(os.environ.get('RETENTION_DAYS', 30))
     interval_hours = int(os.environ.get('BACKUP_INTERVAL_HOURS', 24))
 
@@ -332,7 +335,7 @@ def backup_status():
 @backup_bp.route('/api/backup/snapshot', methods=['POST'])
 def trigger_snapshot():
     try:
-        from scripts.backup import run_backup_job
+        from app.backup import run_backup_job
         info = run_backup_job()
         return jsonify({'status': 'ok', 'snapshot': info})
     except Exception as e:
