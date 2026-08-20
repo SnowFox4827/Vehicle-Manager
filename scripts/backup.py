@@ -8,8 +8,34 @@ import sqlite3
 import sys
 import time
 
-DB_PATH = os.environ.get("DB_PATH", "/app/data/vehicles.db")
-BACKUP_DIR = os.environ.get("BACKUP_DIR", "/backups")
+def get_backup_dir():
+    env_dir = os.environ.get("BACKUP_DIR")
+    if env_dir:
+        if os.name == "nt" and env_dir == "/backups":
+            pass
+        else:
+            return env_dir
+    if os.name != "nt" and os.path.exists("/backups") and os.path.isdir("/backups"):
+        return "/backups"
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "backups")
+
+
+def get_db_path():
+    env_db = os.environ.get("DB_PATH")
+    if env_db:
+        if os.name == "nt" and env_db.startswith("/app"):
+            pass
+        else:
+            return env_db
+    if os.name != "nt" and os.path.exists("/app/data/vehicles.db"):
+        return "/app/data/vehicles.db"
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "backend", "data", "vehicles.db")
+
+
+DB_PATH = get_db_path()
+BACKUP_DIR = get_backup_dir()
 RETENTION_DAYS = int(os.environ.get("RETENTION_DAYS", 30))
 INTERVAL_HOURS = int(os.environ.get("BACKUP_INTERVAL_HOURS", 24))
 

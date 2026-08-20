@@ -4,14 +4,25 @@ import json
 import os
 import shutil
 import sqlite3
-from app.db import DB_PATH as DEFAULT_DB_PATH
+try:
+    from app.db import DB_PATH as DEFAULT_DB_PATH
+except ImportError:
+    try:
+        from .db import DB_PATH as DEFAULT_DB_PATH
+    except ImportError:
+        from db import DB_PATH as DEFAULT_DB_PATH
 
 def get_backup_dir():
-    if "BACKUP_DIR" in os.environ:
-        return os.environ["BACKUP_DIR"]
-    if os.path.exists("/backups") and os.path.isdir("/backups"):
+    env_dir = os.environ.get("BACKUP_DIR")
+    if env_dir:
+        if os.name == "nt" and env_dir == "/backups":
+            pass  # Avoid resolving /backups to C:\backups on Windows
+        else:
+            return env_dir
+    # Check if running in Linux container with /backups mounted
+    if os.name != "nt" and os.path.exists("/backups") and os.path.isdir("/backups"):
         return "/backups"
-    # Fallback to project root / backups when running locally
+    # Project root / backups
     base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return os.path.join(base, "backups")
 
