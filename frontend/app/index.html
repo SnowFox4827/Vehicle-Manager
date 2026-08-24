@@ -339,9 +339,9 @@
                     <!-- File Upload Restore -->
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Upload Backup File (.json, .db)</label>
-                        <div class="flex gap-2">
-                            <input type="file" id="backup-restore-file" class="form-control form-control-sm" accept=".json,.db,.sqlite,.sqlite3" style="font-size: 0.85rem;">
-                            <button type="button" class="btn btn-warning btn-sm flex center gap-1" style="white-space: nowrap;" onclick="handleFileRestore()">
+                        <div class="flex gap-2 align-center">
+                            <input type="file" id="backup-restore-file" class="form-control form-control-sm" accept=".json,.db,.sqlite,.sqlite3" style="min-width: 0; flex: 1;">
+                            <button type="button" class="btn btn-outline-danger btn-sm" style="white-space: nowrap; flex-shrink: 0;" onclick="handleFileRestore()">
                                 Restore File
                             </button>
                         </div>
@@ -350,7 +350,7 @@
                     <!-- Server Snapshots List -->
                     <div>
                         <label class="form-label small fw-semibold">Server Snapshots</label>
-                        <div id="backup-snapshots-list" class="flex col gap-1" style="max-height: 140px; overflow-y: auto;">
+                        <div id="backup-snapshots-list" class="flex col gap-2" style="max-height: 200px; overflow-y: auto;">
                             <div class="text-muted small">Loading snapshots...</div>
                         </div>
                     </div>

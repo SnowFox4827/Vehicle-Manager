@@ -72,8 +72,12 @@ body {
 
 /* ---------- Utility ---------- */
 .flex { display:flex; align-items:center; }
+.flex.col { flex-direction: column; align-items: stretch; }
 .between { justify-content:space-between; }
 .center { justify-content:center; }
+.align-center { align-items: center; }
+.align-start { align-items: flex-start; }
+.align-stretch { align-items: stretch; }
 .wrap { flex-wrap:wrap; }
 .gap-1 { gap:4px; }
 .gap-2 { gap:8px; }
@@ -135,6 +139,12 @@ body {
 
 .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
 .btn-danger:hover { background: rgba(192,57,43,.85); }
+
+.btn-outline-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.btn-outline-danger:hover { background: rgba(235,87,87,.1); }
+
+.btn-warning { background: #f8b84a; color: #1a1d21; border-color: #e8a92e; }
+.btn-warning:hover { background: #eaa82e; color: #1a1d21; border-color: #d99a24; }
 
 .btn-link { background: none; border: none; padding: 0; display: inline-flex; align-items: center; gap: 3px; color: var(--accent); cursor: pointer; font-family: inherit; }
 .btn-link.text-danger { color: var(--danger); }
@@ -256,11 +266,14 @@ th.text-center, td.text-center { text-align: center; }
 /* ---------- Forms ---------- */
 .form-group { margin-bottom: 15px; }
 label { display: block; margin-bottom: 5px; font-size: .84rem; font-weight: 600; color: var(--text-soft); }
-input[type=text], input[type=number], input[type=date], select {
+input[type=text], input[type=number], input[type=date], select, input[type=file] {
   width: 100%; padding: 8px 11px; border-radius: 7px;
   border: 1px solid var(--border-strong); background: var(--input-bg); color: var(--text);
   font-size: .9rem; font-family: inherit;
 }
+input[type=file] { padding: 5px 8px; font-size: .8125rem; }
+.form-control { width: 100%; padding: 8px 11px; border-radius: 7px; border: 1px solid var(--border-strong); background: var(--input-bg); color: var(--text); font-size: .9rem; font-family: inherit; }
+.form-control-sm { padding: 5px 8px; font-size: .8125rem; }
 input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 input::placeholder { color: var(--text-faint); }
 
@@ -268,6 +281,7 @@ input::placeholder { color: var(--text-faint); }
 .modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(15,18,22,.5); align-items: center; justify-content: center; padding: 16px; }
 .modal.open { display: flex; }
 .modal-dialog { width: 100%; max-width: 470px; }
+#backupModal .modal-dialog { max-width: 540px; }
 .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text); box-shadow: var(--shadow-md); }
 .modal-content.danger { border-color: var(--danger); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); }
@@ -281,4 +295,3 @@ input::placeholder { color: var(--text-faint); }
 .overspend-msg { font-weight: 700; color: var(--danger); }
 .overspend-note { color: var(--text-soft); font-size: .85rem; }
 .backup-status-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-.flex.col { flex-direction: column; }

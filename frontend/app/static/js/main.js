@@ -530,12 +530,12 @@ window.showBackupModal = async function() {
                 snapshotsBox.innerHTML = '<div class="text-muted small">No server snapshots available yet.</div>';
             } else {
                 snapshotsBox.innerHTML = list.map(s => `
-                    <div class="flex space-between align-center gap-2 p-2" style="border:1px solid var(--border-color,#dee2e6); border-radius:6px;">
-                        <div class="small" style="flex:1; min-width:0;">
-                            <div class="fw-semibold text-truncate" style="word-break:break-all;">${s.name}</div>
-                            <div class="text-muted">${s.created_at ? new Date(s.created_at).toLocaleString() : ''}</div>
+                    <div class="flex between align-center gap-2" style="border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 12px; background: var(--surface-2);">
+                        <div class="grow" style="min-width: 0;">
+                            <div class="fw-semibold" style="font-size: 0.875rem; word-break: break-all;">${s.name}</div>
+                            <div class="text-muted small">${s.created_at ? new Date(s.created_at).toLocaleString() : ''}</div>
                         </div>
-                        <button type="button" class="btn btn-warning btn-sm" style="white-space:nowrap;" onclick="handleSnapshotRestore('${s.name}')">Restore</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" style="white-space: nowrap; flex-shrink: 0;" onclick="handleSnapshotRestore('${s.name}')">Restore</button>
                     </div>
                 `).join('');
             }
