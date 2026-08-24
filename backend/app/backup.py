@@ -49,6 +49,11 @@ def run_backup_job():
     os.makedirs(backup_dir, exist_ok=True)
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%SZ")
     snapshot_dir = os.path.join(backup_dir, f"snapshot_{timestamp}")
+    # Guard against same-second collisions (e.g. safety snapshot right after a manual one)
+    suffix = 1
+    while os.path.exists(snapshot_dir):
+        snapshot_dir = os.path.join(backup_dir, f"snapshot_{timestamp}_{suffix}")
+        suffix += 1
     os.makedirs(snapshot_dir, exist_ok=True)
 
     target_db = os.path.join(snapshot_dir, "vehicles.db")

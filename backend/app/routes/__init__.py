@@ -1,6 +1,12 @@
 from flask import Blueprint, jsonify, request, send_file
 from app.db import get_db, DB_PATH
 import os
+import io
+import json
+import sqlite3
+import datetime
+import tempfile
+import shutil
 
 dashboard_bp = Blueprint('dashboard', __name__)
 vehicles_bp = Blueprint('vehicles', __name__)
@@ -281,7 +287,118 @@ def delete_maintenance(mid):
     return jsonify({'success': True})
 
 
-# ==================== Backup & Export ====================
+# ==================== Backup, Export & Restore ====================
+
+def get_database_json():
+    """Extract all vehicles, mileage, and maintenance logs as a dictionary."""
+    conn = get_db()
+    vehicles = [dict(r) for r in conn.execute('SELECT * FROM vehicles').fetchall()]
+    mileage = [dict(r) for r in conn.execute('SELECT * FROM mileage').fetchall()]
+    maintenance = [dict(r) for r in conn.execute('SELECT * FROM maintenance').fetchall()]
+    conn.close()
+
+    return {
+        'version': 1,
+        'exported_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        'tables': {
+            'vehicles': vehicles,
+            'mileage': mileage,
+            'maintenance': maintenance
+        }
+    }
+
+
+def restore_from_json_dict(data):
+    """Restore database state from a parsed JSON dictionary."""
+    if not isinstance(data, dict):
+        raise ValueError("Invalid JSON format: root must be an object.")
+
+    # Support both nested under 'tables' or direct root keys
+    tables = data.get('tables') if isinstance(data.get('tables'), dict) else data
+    vehicles = tables.get('vehicles', [])
+    mileage = tables.get('mileage', [])
+    maintenance = tables.get('maintenance', [])
+
+    if not isinstance(vehicles, list) or not isinstance(mileage, list) or not isinstance(maintenance, list):
+        raise ValueError("Invalid format: 'vehicles', 'mileage', and 'maintenance' must be lists.")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("PRAGMA foreign_keys = OFF;")
+        cursor.execute("BEGIN TRANSACTION;")
+
+        # Clear existing data
+        cursor.execute("DELETE FROM maintenance;")
+        cursor.execute("DELETE FROM mileage;")
+        cursor.execute("DELETE FROM vehicles;")
+
+        # Restore vehicles
+        for v in vehicles:
+            cols = list(v.keys())
+            placeholders = ', '.join(['?'] * len(cols))
+            col_names = ', '.join(cols)
+            cursor.execute(f"INSERT INTO vehicles ({col_names}) VALUES ({placeholders})", list(v.values()))
+
+        # Restore mileage
+        for m in mileage:
+            cols = list(m.keys())
+            placeholders = ', '.join(['?'] * len(cols))
+            col_names = ', '.join(cols)
+            cursor.execute(f"INSERT INTO mileage ({col_names}) VALUES ({placeholders})", list(m.values()))
+
+        # Restore maintenance
+        for mt in maintenance:
+            cols = list(mt.keys())
+            placeholders = ', '.join(['?'] * len(cols))
+            col_names = ', '.join(cols)
+            cursor.execute(f"INSERT INTO maintenance ({col_names}) VALUES ({placeholders})", list(mt.values()))
+
+        # Reset SQLite autoincrement sequences to match maximum restored IDs
+        for table in ['vehicles', 'mileage', 'maintenance']:
+            cursor.execute(f"SELECT MAX(id) FROM {table};")
+            max_id = cursor.fetchone()[0] or 0
+            cursor.execute("INSERT OR REPLACE INTO sqlite_sequence (name, seq) VALUES (?, ?);", (table, max_id))
+
+        cursor.execute("COMMIT;")
+        cursor.execute("PRAGMA foreign_keys = ON;")
+    except Exception:
+        cursor.execute("ROLLBACK;")
+        raise
+    finally:
+        conn.close()
+
+
+def restore_from_db_file(src_path):
+    """Safely restore the SQLite database file directly using SQLite online backup."""
+    # Verify sqlite file header
+    with open(src_path, 'rb') as f:
+        header = f.read(16)
+        if not header.startswith(b'SQLite format 3'):
+            raise ValueError("Uploaded file is not a valid SQLite database.")
+
+    src_conn = sqlite3.connect(src_path)
+    integrity = src_conn.execute("PRAGMA quick_check;").fetchone()
+    if not integrity or integrity[0] != "ok":
+        src_conn.close()
+        raise ValueError("Corrupt SQLite database file.")
+
+    dst_conn = sqlite3.connect(DB_PATH)
+    with dst_conn:
+        src_conn.backup(dst_conn)
+    dst_conn.close()
+    src_conn.close()
+
+
+def take_safety_snapshot():
+    """Create a safety snapshot before any destructive restore operation."""
+    try:
+        from app.backup import run_backup_job
+        return run_backup_job()
+    except Exception:
+        return None
+
 
 @backup_bp.route('/api/backup/export', methods=['GET'])
 def export_backup():
@@ -291,24 +408,11 @@ def export_backup():
             return jsonify({'error': 'Database file not found'}), 404
         return send_file(DB_PATH, as_attachment=True, download_name='vehicles_backup.db')
 
-    conn = get_db()
-    vehicles = [dict(r) for r in conn.execute('SELECT * FROM vehicles').fetchall()]
-    mileage = [dict(r) for r in conn.execute('SELECT * FROM mileage').fetchall()]
-    maintenance = [dict(r) for r in conn.execute('SELECT * FROM maintenance').fetchall()]
-    conn.close()
-
-    export_payload = {
-        'version': 1,
-        'exported_at': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
-        'tables': {
-            'vehicles': vehicles,
-            'mileage': mileage,
-            'maintenance': maintenance
-        }
-    }
+    export_payload = get_database_json()
     response = jsonify(export_payload)
     response.headers['Content-Disposition'] = 'attachment; filename=vehicles_backup.json'
     return response
+
 
 @backup_bp.route('/api/backup/status', methods=['GET'])
 def backup_status():
@@ -322,15 +426,29 @@ def backup_status():
         for entry in sorted(os.listdir(backup_dir), reverse=True):
             entry_path = os.path.join(backup_dir, entry)
             if os.path.isdir(entry_path) and entry.startswith('snapshot_'):
-                snapshots.append(entry)
+                created_at = None
+                manifest_path = os.path.join(entry_path, 'manifest.json')
+                if os.path.exists(manifest_path):
+                    try:
+                        with open(manifest_path, 'r', encoding='utf-8') as mf:
+                            mdata = json.load(mf)
+                            created_at = mdata.get('snapshot_timestamp')
+                    except Exception:
+                        pass
+                snapshots.append({
+                    'name': entry,
+                    'created_at': created_at or entry.replace('snapshot_', '')
+                })
 
     return jsonify({
         'backup_dir': backup_dir,
         'retention_days': retention_days,
         'interval_hours': interval_hours,
         'snapshot_count': len(snapshots),
-        'latest_snapshot': snapshots[0] if snapshots else None
+        'latest_snapshot': snapshots[0]['name'] if snapshots else None,
+        'snapshots': snapshots
     })
+
 
 @backup_bp.route('/api/backup/snapshot', methods=['POST'])
 def trigger_snapshot():
@@ -340,3 +458,91 @@ def trigger_snapshot():
         return jsonify({'status': 'ok', 'snapshot': info})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@backup_bp.route('/api/backup/restore/upload', methods=['POST'])
+def restore_upload():
+    """Upload a .json or .db backup file and restore the database."""
+    if 'file' not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded."}), 400
+
+    file = request.files['file']
+    filename = file.filename or ''
+
+    # Safety snapshot first
+    safety_snap = take_safety_snapshot()
+
+    ext = os.path.splitext(filename)[1].lower()
+
+    try:
+        if ext == '.json':
+            content = file.read().decode('utf-8')
+            data = json.loads(content)
+            restore_from_json_dict(data)
+            return jsonify({
+                "success": True,
+                "message": f"Successfully restored data from {filename}.",
+                "safety_snapshot": safety_snap.get('snapshot_dir') if safety_snap else None
+            })
+        elif ext in ('.db', '.sqlite', '.sqlite3'):
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                file.save(tmp.name)
+                tmp_path = tmp.name
+            try:
+                restore_from_db_file(tmp_path)
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            return jsonify({
+                "success": True,
+                "message": f"Successfully restored database from {filename}.",
+                "safety_snapshot": safety_snap.get('snapshot_dir') if safety_snap else None
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"Unsupported file type '{ext}'. Must be .json, .db, .sqlite, or .sqlite3."
+            }), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@backup_bp.route('/api/backup/restore/snapshot', methods=['POST'])
+def restore_snapshot():
+    """Restore the database from a stored snapshot on the server."""
+    payload = request.get_json(silent=True) or {}
+    snapshot_dir = payload.get('snapshot_dir') or payload.get('snapshot')
+    if not snapshot_dir:
+        return jsonify({"success": False, "error": "Missing 'snapshot_dir' parameter."}), 400
+
+    snapshot_dir = os.path.basename(snapshot_dir)
+    from app.backup import get_backup_dir
+    backup_dir = get_backup_dir()
+    target_path = os.path.join(backup_dir, snapshot_dir)
+
+    if not os.path.isdir(target_path):
+        return jsonify({"success": False, "error": f"Snapshot directory '{snapshot_dir}' not found."}), 404
+
+    # Create safety snapshot first
+    safety_snap = take_safety_snapshot()
+
+    try:
+        db_file = os.path.join(target_path, 'vehicles.db')
+        json_file = os.path.join(target_path, 'data_export.json')
+
+        if os.path.exists(db_file):
+            restore_from_db_file(db_file)
+        elif os.path.exists(json_file):
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            restore_from_json_dict(data)
+        else:
+            return jsonify({"success": False, "error": "No database or JSON backup found in snapshot."}), 404
+
+        return jsonify({
+            "success": True,
+            "message": f"Successfully restored from snapshot '{snapshot_dir}'.",
+            "safety_snapshot": safety_snap.get('snapshot_dir') if safety_snap else None
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400

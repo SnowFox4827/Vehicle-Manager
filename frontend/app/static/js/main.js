@@ -515,14 +515,34 @@ function initForms() {
 
 window.showBackupModal = async function() {
     openModal('backupModal');
+    const snapshotsBox = document.getElementById('backup-snapshots-list');
+    if (snapshotsBox) snapshotsBox.innerHTML = '<div class="text-muted small">Loading snapshots...</div>';
     try {
         const status = await api('backup/status');
         const countBox = document.getElementById('backup-total-count');
         const timeBox = document.getElementById('backup-last-time');
         if (timeBox) timeBox.textContent = status.latest_snapshot ? `Latest: ${status.latest_snapshot}` : 'No snapshots on server yet';
         if (countBox) countBox.textContent = `${status.snapshot_count} automated snapshot(s) stored in ${status.backup_dir} (Retention: ${status.retention_days} days)`;
+
+        const list = status.snapshots || [];
+        if (snapshotsBox) {
+            if (list.length === 0) {
+                snapshotsBox.innerHTML = '<div class="text-muted small">No server snapshots available yet.</div>';
+            } else {
+                snapshotsBox.innerHTML = list.map(s => `
+                    <div class="flex space-between align-center gap-2 p-2" style="border:1px solid var(--border-color,#dee2e6); border-radius:6px;">
+                        <div class="small" style="flex:1; min-width:0;">
+                            <div class="fw-semibold text-truncate" style="word-break:break-all;">${s.name}</div>
+                            <div class="text-muted">${s.created_at ? new Date(s.created_at).toLocaleString() : ''}</div>
+                        </div>
+                        <button type="button" class="btn btn-warning btn-sm" style="white-space:nowrap;" onclick="handleSnapshotRestore('${s.name}')">Restore</button>
+                    </div>
+                `).join('');
+            }
+        }
     } catch (e) {
         console.error(e);
+        if (snapshotsBox) snapshotsBox.innerHTML = '<div class="text-muted small">Failed to load snapshots.</div>';
     }
 };
 
@@ -541,5 +561,76 @@ window.triggerServerSnapshot = async function() {
         alert('Snapshot error: ' + e.message);
     } finally {
         if (btn) btn.disabled = false;
+    }
+};
+
+// ==================== Restore from Backup ====================
+
+const RESTORE_EXTENSIONS = ['.json', '.db', '.sqlite', '.sqlite3'];
+
+window.handleFileRestore = async function() {
+    const input = document.getElementById('backup-restore-file');
+    if (!input || !input.files || !input.files[0]) {
+        alert('Please select a .json or .db backup file first.');
+        return;
+    }
+
+    const file = input.files[0];
+    const lowerName = file.name.toLowerCase();
+    const ext = lowerName.slice(lowerName.lastIndexOf('.'));
+    if (!RESTORE_EXTENSIONS.includes(ext)) {
+        alert(`Unsupported file type '${ext}'. Please choose a .json, .db, .sqlite, or .sqlite3 file.`);
+        return;
+    }
+
+    const ok = confirm(`Restore data from "${file.name}"? This will REPLACE all current vehicle data. An automatic safety snapshot will be taken first.`);
+    if (!ok) return;
+
+    const btn = document.querySelector('button[onclick="handleFileRestore()"]');
+    if (btn) btn.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/backup/restore/upload', { method: 'POST', body: formData });
+        const data = await res.json().catch(() => ({ success: false, error: 'Server error' }));
+        if (!res.ok || !data.success) {
+            alert('Restore failed: ' + (data.error || 'Unknown error'));
+            return;
+        }
+
+        alert(data.message + (data.safety_snapshot ? `\nSafety snapshot: ${data.safety_snapshot}` : ''));
+        input.value = '';
+        await refreshAllData();
+        showBackupModal();
+    } catch (e) {
+        alert('Restore error: ' + e.message);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+};
+
+window.handleSnapshotRestore = async function(snapshotName) {
+    if (!snapshotName) return;
+
+    const ok = confirm(`Restore from snapshot "${snapshotName}"? This will REPLACE all current vehicle data. An automatic safety snapshot will be taken first.`);
+    if (!ok) return;
+
+    try {
+        const data = await api('backup/restore/snapshot', {
+            method: 'POST',
+            body: JSON.stringify({ snapshot_dir: snapshotName })
+        });
+
+        if (!data.success) {
+            alert('Restore failed: ' + (data.error || 'Unknown error'));
+            return;
+        }
+
+        alert(data.message + (data.safety_snapshot ? `\nSafety snapshot: ${data.safety_snapshot}` : ''));
+        await refreshAllData();
+        showBackupModal();
+    } catch (e) {
+        alert('Restore error: ' + e.message);
     }
 };

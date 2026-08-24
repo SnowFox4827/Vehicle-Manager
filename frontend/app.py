@@ -37,17 +37,17 @@ def serve_css(filename):
 @app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def proxy_api(path):
     url = f"{BACKEND_URL}/api/{path}"
-    headers = {k: v for k, v in request.headers if k.lower() != 'host'}
+    headers = {k: v for k, v in request.headers if k.lower() not in ('host', 'content-length')}
 
     try:
         if request.method == 'GET':
-            resp = session.get(url, params=request.args, headers=headers, timeout=10)
+            resp = session.get(url, params=request.args, headers=headers, timeout=60)
         elif request.method == 'POST':
-            resp = session.post(url, json=request.get_json(silent=True), data=request.get_data() if not request.is_json else None, headers=headers, timeout=10)
+            resp = session.post(url, json=request.get_json(silent=True), data=request.get_data() if not request.is_json else None, headers=headers, timeout=60)
         elif request.method == 'PUT':
-            resp = session.put(url, json=request.get_json(silent=True), headers=headers, timeout=10)
+            resp = session.put(url, json=request.get_json(silent=True), headers=headers, timeout=60)
         elif request.method == 'DELETE':
-            resp = session.delete(url, headers=headers, timeout=10)
+            resp = session.delete(url, headers=headers, timeout=60)
         else:
             return jsonify({'error': 'Method not allowed'}), 405
 
