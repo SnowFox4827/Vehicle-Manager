@@ -432,12 +432,26 @@ def backup_status():
                     try:
                         with open(manifest_path, 'r', encoding='utf-8') as mf:
                             mdata = json.load(mf)
-                            created_at = mdata.get('snapshot_timestamp')
+                            raw_ts = mdata.get('snapshot_timestamp', '')
+                            if raw_ts:
+                                # Parse YYYYMMDD_HHMMSSZ format
+                                try:
+                                    clean_ts = raw_ts.replace('_', '').replace('Z', '').replace('z', '')[:14]
+                                    dt = datetime.datetime.strptime(clean_ts, "%Y%m%d%H%M%S")
+                                    created_at = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+                                except Exception:
+                                    created_at = raw_ts
                     except Exception:
                         pass
+                if not created_at:
+                    try:
+                        stat = os.stat(entry_path)
+                        created_at = datetime.datetime.fromtimestamp(stat.st_mtime, datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+                    except Exception:
+                        created_at = entry.replace('snapshot_', '')
                 snapshots.append({
                     'name': entry,
-                    'created_at': created_at or entry.replace('snapshot_', '')
+                    'created_at': created_at
                 })
 
     return jsonify({

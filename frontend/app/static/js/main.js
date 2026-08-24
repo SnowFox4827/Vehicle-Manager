@@ -511,6 +511,22 @@ function initForms() {
     });
 }
 
+function formatSnapshotDate(raw) {
+    if (!raw) return '';
+    // Handle YYYYMMDD_HHMMSSZ or snapshot_YYYYMMDD_HHMMSSZ
+    const match = String(raw).match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+    if (match) {
+        const [, y, m, d, hh, mm, ss] = match;
+        const dt = new Date(Date.UTC(+y, +m - 1, +d, +hh, +mm, +ss));
+        if (!isNaN(dt.getTime())) return dt.toLocaleString();
+    }
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleString();
+    }
+    return raw;
+}
+
 // ==================== Backups ====================
 
 window.showBackupModal = async function() {
@@ -533,7 +549,7 @@ window.showBackupModal = async function() {
                     <div class="flex between align-center gap-2" style="border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 12px; background: var(--surface-2);">
                         <div class="grow" style="min-width: 0;">
                             <div class="fw-semibold" style="font-size: 0.875rem; word-break: break-all;">${s.name}</div>
-                            <div class="text-muted small">${s.created_at ? new Date(s.created_at).toLocaleString() : ''}</div>
+                            <div class="text-muted small">${formatSnapshotDate(s.created_at || s.name)}</div>
                         </div>
                         <button type="button" class="btn btn-outline-danger btn-sm" style="white-space: nowrap; flex-shrink: 0;" onclick="handleSnapshotRestore('${s.name}')">Restore</button>
                     </div>
