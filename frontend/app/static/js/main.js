@@ -130,7 +130,7 @@ function renderVehicles() {
         return `
             <div class="card h-100">
                 <div class="card-body">
-                    <div class="flex space-between align-center mb-2">
+                    <div class="flex between align-center mb-2">
                         <h5 class="fw-bold m-0">${v.year ? v.year + ' ' : ''}${v.make} ${v.model}</h5>
                         <div class="flex gap-2">
                             <button class="btn btn-xs btn-outline-secondary" onclick="editVehicle(${v.id})">Edit</button>
