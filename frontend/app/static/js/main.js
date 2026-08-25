@@ -130,11 +130,11 @@ function renderVehicles() {
         return `
             <div class="card h-100">
                 <div class="card-body">
-                    <div class="flex space-between align-center mb-2">
+                    <div class="flex between align-center mb-2">
                         <h5 class="fw-bold m-0">${v.year ? v.year + ' ' : ''}${v.make} ${v.model}</h5>
                         <div class="flex gap-2">
-                            <button class="btn-link text-primary" onclick="editVehicle(${v.id})" title="Edit Vehicle">${ICONS.edit}</button>
-                            <button class="btn-link text-danger" onclick="deleteVehicle(${v.id})" title="Delete Vehicle">${ICONS.trash}</button>
+                            <button class="btn btn-xs btn-outline-secondary" onclick="editVehicle(${v.id})">Edit</button>
+                            <button class="btn btn-xs btn-outline-danger" onclick="deleteVehicle(${v.id})">Delete</button>
                         </div>
                     </div>
                     <div class="acc-balance">${latestMiles}</div>
@@ -157,8 +157,8 @@ function renderVehicles() {
             <td class="text-end text-dark">${v.maintenance_count || 0}</td>
             <td class="text-center">
                 <div class="flex center gap-2">
-                    <button class="btn-link text-primary" onclick="editVehicle(${v.id})" title="Edit">${ICONS.edit}</button>
-                    <button class="btn-link text-danger" onclick="deleteVehicle(${v.id})" title="Delete">${ICONS.trash}</button>
+                    <button class="btn btn-xs btn-outline-secondary" onclick="editVehicle(${v.id})">Edit</button>
+                    <button class="btn btn-xs btn-outline-danger" onclick="deleteVehicle(${v.id})">Delete</button>
                 </div>
             </td>
         </tr>
